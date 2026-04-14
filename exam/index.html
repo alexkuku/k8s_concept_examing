@@ -101,7 +101,33 @@
         </div>
     </div>
 
-    <script src="questions.js"></script>
+    <!-- 题目版本配置 -->
+    <script src="version-config.js" onerror="console.error('❌ version-config.js 加载失败')" onload="console.log('✓ version-config.js 加载完成')"></script>
+
+    <!-- 题目文件 - 动态加载 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof QUESTION_VERSION_CONFIG === 'undefined') {
+                console.error('❌ QUESTION_VERSION_CONFIG 未定义');
+                return;
+            }
+            const version = QUESTION_VERSION_CONFIG.currentVersion;
+            const questionFile = QUESTION_VERSION_CONFIG.versions[version].questionFile;
+            console.log(`📂 准备加载 ${version} 题库: ${questionFile}`);
+
+            // 动态加载版本配置对应的题目文件
+            const script = document.createElement('script');
+            script.src = questionFile;
+            script.onload = () => {
+                console.log(`✓ ${version} 题库加载完成`);
+                console.log('  题目数:', questions ? questions.length : 'N/A');
+            };
+            script.onerror = () => console.error(`❌ ${version} 题库加载失败: ${questionFile}`);
+            document.head.appendChild(script);
+        });
+    </script>
+
+    <!-- 主逻辑 -->
     <script src="exam.js"></script>
 </body>
 </html>

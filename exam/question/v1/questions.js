@@ -3707,4 +3707,3 @@ const questions = [
 // 提取唯一模块列表
 const modules = [...new Set(questions.map(q => q.module))];
 
-module.exports = { questions, modules };

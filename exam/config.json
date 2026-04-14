@@ -1,0 +1,19 @@
+{
+  "currentVersion": "v1",
+  "versions": {
+    "v1": {
+      "name": "v1",
+      "description": "初始版本题目集",
+      "questionFile": "question/v1/questions.js",
+      "createdDate": "2024-04-13",
+      "questionCount": 412
+    },
+    "v2": {
+      "name": "v2",
+      "description": "待添加的新版本题目集",
+      "questionFile": "question/v2/questions.js",
+      "createdDate": null,
+      "questionCount": 0
+    }
+  }
+}

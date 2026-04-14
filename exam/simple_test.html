@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head></head>
+<body>
+<script src="question/v1/questions.js"></script>
+<script>
+if (questions && modules) {
+    document.body.innerHTML = '<h1>✅ 测试成功</h1><p>题目数: ' + questions.length + '</p><p>模块数: ' + modules.length + '</p><p>模块列表: ' + modules + '</p>';
+} else {
+    document.body.innerHTML = '<h1>❌ 测试失败</h1><p>questions: ' + typeof questions + '</p><p>modules: ' + typeof modules + '</p>';
+    console.error('questions:', questions);
+    console.error('modules:', modules);
+}
+</script>
+</body>
+</html>

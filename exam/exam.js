@@ -538,11 +538,22 @@ function returnToHome() {
 
 // 页面初始化
 document.addEventListener('DOMContentLoaded', () => {
-    initHomePage();
-
     // 绑定控制按钮事件（只绑定一次）
     prevBtn.addEventListener('click', handlePrevQuestion);
     nextBtn.addEventListener('click', handleNextQuestion);
     submitBtn.addEventListener('click', handleSubmit);
     returnHomeBtn.addEventListener('click', returnToHome);
+
+    // 等待题目动态加载完成
+    function waitForQuestions() {
+        if (typeof questions !== 'undefined' && typeof modules !== 'undefined') {
+            console.log('📋 题目已加载，初始化主页');
+            initHomePage();
+        } else {
+            console.log('⏳ 等待题目加载...');
+            setTimeout(waitForQuestions, 100);
+        }
+    }
+
+    waitForQuestions();
 });
