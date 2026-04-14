@@ -388,20 +388,53 @@ function goToQuestion(index) {
 
 // 交卷
 function handleSubmit() {
-    // 确认所有题目都已回答
+    // 检查所有题目是否已回答
     const answeredCount = currentQuestions.filter((_, index) =>
         userAnswers[index] !== undefined && userAnswers[index] !== null && userAnswers[index].length > 0
     ).length;
 
     const unansweredCount = currentQuestions.length - answeredCount;
-    let confirmMessage = '确定要交卷吗？交卷后将无法修改答案。';
-    if (unansweredCount > 0) {
-        confirmMessage = `还有 ${unansweredCount} 道题未完成，确定要交卷吗？`;
-    }
 
-    if (!confirm(confirmMessage)) {
-        return;
+    // 检查是否所有题目都已回答
+    if (unansweredCount > 0) {
+        // 使用自定义确认弹窗（兼容移动端）
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        `;
+        modal.innerHTML = `
+            <div style="background: white; padding: 20px; border-radius: 8px; max-width: 300px; text-align: center;">
+                <p style="margin: 0 0 20px 0; font-size: 16px;">还有 ${unansweredCount} 道题未完成，确定要交卷吗？</p>
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button id="modal-cancel" style="padding: 10px 20px; border: none; background: #6c757d; color: white; border-radius: 4px; cursor: pointer; font-size: 14px;">取消</button>
+                    <button id="modal-confirm" style="padding: 10px 20px; border: none; background: #28a745; color: white; border-radius: 4px; cursor: pointer; font-size: 14px;">确定交卷</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // 绑定按钮事件
+        modal.querySelector('#modal-cancel').onclick = () => modal.remove();
+        modal.querySelector('#modal-confirm').onclick = () => {
+            modal.remove();
+            submitExam();
+        };
+    } else {
+        submitExam();
     }
+}
+
+// 执行交卷逻辑
+function submitExam() {
 
     // 计算成绩
     let correctCount = 0;
@@ -543,6 +576,12 @@ document.addEventListener('DOMContentLoaded', () => {
     nextBtn.addEventListener('click', handleNextQuestion);
     submitBtn.addEventListener('click', handleSubmit);
     returnHomeBtn.addEventListener('click', returnToHome);
+
+    // 移动端兼容：同时支持 touchstart 和 click
+    submitBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault(); // 防止触发两次
+        handleSubmit();
+    }, { passive: false });
 
     // 等待题目动态加载完成
     function waitForQuestions() {

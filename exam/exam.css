@@ -343,11 +343,21 @@ body {
 .control-buttons #submit-btn {
     background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
     border-color: #28a745;
+    /* 移动端优化 */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 .control-buttons #submit-btn:hover:not(:disabled) {
     background: linear-gradient(135deg, #218838 0%, #155724 100%);
     border-color: #1e7e34;
+}
+
+.control-buttons #submit-btn:active:not(:disabled) {
+    transform: scale(0.98);
+    opacity: 0.9;
 }
 
 /* 题目导航 */
@@ -657,3 +667,71 @@ body {
 .hidden {
     display: none !important;
 }
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+
+    .card {
+        padding: 15px;
+    }
+
+    .nav-btn,
+    .submit-btn {
+        padding: 8px 12px;
+        font-size: 14px;
+        min-height: 44px; /* iOS 最小触控区域 */
+    }
+
+    .control-buttons {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+    }
+
+    .progress-info {
+        min-width: auto;
+        font-size: 14px;
+    }
+
+    /* 确保按钮可点击 */
+    button,
+    .nav-btn,
+    .submit-btn {
+        pointer-events: auto !important;
+        touch-action: manipulation;
+    }
+
+    /* 选项点击区域优化 */
+    .option-label {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+    }
+}
+
+/* iOS Safari 特殊优化 */
+@supports (-webkit-touch-callout: none) {
+    .nav-btn,
+    .submit-btn,
+    .option-label {
+        -webkit-user-select: none;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+    }
+}
+
+/* Android Chrome 优化 */
+button::-moz-focus-inner {
+    border: 0;
+}
+
+button:focus {
+    outline: none;
+}
+
+button:focus-visible {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
