@@ -42,7 +42,7 @@ try {
     // 查找插入位置（最后一个模块题目的结束标记之后、数组结束之前）
     const arrayEndPos = originalContent.lastIndexOf('\n];\n');
     if (arrayEndPos === -1) {
-        throw new Error('无法找到数组结束位置"];
+        throw new Error('无法找到数组结束位置')
     }
 
     const beforeArrayEnd = originalContent.substring(0, arrayEndPos);
