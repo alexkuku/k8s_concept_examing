@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>调度 - Kubernetes 核心概念</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>📊 调度</h1>
+            <p class="subtitle">理解 Pod 调度和资源分配</p>
+        </div>
+    </header>
+
+    <nav class="main-nav">
+        <div class="container">
+            <ul>
+                <li><a href="index.html">首页</a></li>
+                <li><a href="overview.html">概述</a></li>
+                <li><a href="architecture.html">集群架构</a></li>
+                <li><a href="containers.html">容器</a></li>
+                <li><a href="workloads.html">工作负载</a></li>
+                <li><a href="networking.html">网络</a></li>
+                <li><a href="storage.html">存储</a></li>
+                <li><a href="configuration.html">配置</a></li>
+                <li><a href="scheduling.html" class="active">调度</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main>
+        <div class="container">
+
+            <!-- 调度概述 -->
+            <section class="concept-section">
+                <h2>调度概述</h2>
+                <p>Kubernetes 调度器负责将 Pod 分配到合适的节点上运行。调度决策基于资源需求、策略约束、亲和性/反亲和性规则等多种因素。</p>
+
+                <h3>调度的核心目标</h3>
+                <ul>
+                    <li><strong>资源分配</strong>：确保 Pod 有足够的资源运行</li>
+                    <li><strong>约束满足</strong>：满足各种调度约束和策略</li>
+                    <li><strong>负载均衡</strong>：均匀分布工作负载</li>
+                    <li><strong>高可用</strong>：分散应用提高可用性</li>
+                    <li><strong>效率</strong>：最大化资源利用率</li>
+                </ul>
+
+                <div class="relation-diagram">
+                    <div class="diagram-container" style="flex-direction: column; align-items: center;">
+                        <div class="diagram-box object">Pod（待调度）</div>
+                        <div class="diagram-arrow">→</div>
+                        <div class="diagram-box object">Kubernetes Scheduler</div>
+                        <div class="diagram-arrow">→</div>
+                        <div style="display: flex; gap: 1rem;">
+                            <div class="diagram-box worker-node">节点 1</div>
+                            <div class="diagram-box worker-node">节点 2</div>
+                            <div class="diagram-box worker-node">节点 3</div>
+                        </div>
+                        <div class="diagram-arrow">↓</div>
+                        <div class="diagram-box object">Pod 运行在节点 2</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 调度流程 -->
+            <section class="concept-section">
+                <h2>调度流程</h2>
+                <p>Kubernetes 调度器通过两个阶段完成调度：过滤（Filtering）和打分（Scoring）。</p>
+
+                <h3>调度流程详解</h3>
+                <div class="flow-diagram">
+                    <div class="flow-step">1. Watch 待调度 Pod</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">2. 预选阶段：过滤不合适的节点</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">3. 优选阶段：对候选节点打分</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">4. 选择最高分节点</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">5. 绑定 Pod 到节点</div>
+                </div>
+
+                <h3>预选阶段</h3>
+                <p>预选阶段根据预设的规则过滤掉不满足条件的节点。</p>
+
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>调度器扩展</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>NodeUnschedulable</strong></td>
+                            <td>检查节点是否标记为不可调度</td>
+                        </tr>
+                        <tr>
+                            <td><strong>NodeResourcesFit</strong></td>
+                            <td>检查节点是否有足够资源</td>
+                        </tr>
+                        <tr>
+                            <td><strong>NodePorts</strong></td>
+                            <td>检查节点是否有所需端口</td>
+                        </tr>
+                        <tr>
+                            <td><strong>NodeAffinity</strong></td>
+                            <td>检查节点亲和性约束</td>
+                        </tr>
+                        <tr>
+                            <td><strong>TaintToleration</strong></td>
+                            <td>检查污点和容忍度</td>
+                        </tr>
+                        <tr>
+                            <td><strong>NodeVolumeLimits</strong></td>
+                            <td>检查卷限制</td>
+                        </tr>
+                        <tr>
+                            <td><strong>VolumeZone</strong></td>
+                            <td>检查卷可用区匹配</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PodToleratesNodeTaints</strong></td>
+                            <td>检查 Pod 是否容忍节点污点</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>优选阶段</h3>
+                <p>优选阶段对通过预选的节点进行评分，选择最高分的节点。</p>
+
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>评分策略</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>NodeResourcesFit</strong></td>
+                            <td>资源利用率越均衡分数越高</td>
+                        </tr>
+                        <tr>
+                            <td><strong>NodeAffinity</strong></td>
+                            <td>根据亲和性规则加分</td>
+                        </tr>
+                        <tr>
+                            <td><strong>TaintToleration</strong></td>
+                            <td>根据容忍度加分</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ImageLocality</strong></td>
+                            <td>镜像已存在的节点分数更高</td>
+                        </tr>
+                        <tr>
+                            <td><strong>InterPodAffinity</strong></td>
+                            <td>根据 Pod 间亲和性加分</td>
+                        </tr>
+                        <tr>
+                            <td><strong>NodeAntiAffinity</strong></td>
+                            <td>根据反亲和性加分或减分</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- 节点选择器 -->
+            <section class="concept-section">
+                <h2>节点选择器</h2>
+                <p>节点选择器（NodeSelector）是最简单的节点选择方式，通过标签选择器匹配节点。</p>
+
+                <h3>使用方式</h3>
+                <pre><code># 为节点打标签
+kubectl label nodes node1 disktype=ssd
+
+# Pod 使用节点选择器
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-with-nodeselector
+spec:
+  nodeSelector:
+    disktype: ssd  # 只有有 disktype=ssd 标签的节点才会被调度
+  containers:
+  - name: nginx
+    image: nginx</code></pre>
+
+                <h3>限制</h3>
+                <ul>
+                    <li>只能基于标签的精确匹配</li>
+                    <li>不支持复杂的条件表达式</li>
+                    <li>不支持优先级或软约束</li>
+                </ul>
+            </section>
+
+            <!-- 节点亲和性 -->
+            <section class="concept-section">
+                <h2>节点亲和性 <span class="badge badge-primary">重要</span></h2>
+                <p>节点亲和性（Node Affinity）提供了更强大的节点选择机制，支持硬约束（Must）和软约束（Prefer）。</p>
+
+                <h3>亲和性类型</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>类型</th>
+                            <th>说明</th>
+                            <th>必须满足</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>requiredDuringSchedulingIgnoredDuringExecution</strong></td>
+                            <td>硬约束，调度时必须满足</td>
+                            <td>是</td>
+                        </tr>
+                        <tr>
+                            <td><strong>preferredDuringSchedulingIgnoredDuringExecution</strong></td>
+                            <td>软约束，尽量满足</td>
+                            <td>否</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>亲和性配置示例</h3>
+                <pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: with-node-affinity
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+            - node1
+            - node2
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        preference:
+          matchExpressions:
+          - key: disktype
+            operator: In
+            values:
+            - ssd
+  containers:
+  - name: nginx
+    image: nginx</code></pre>
+
+                <h3>操作符</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>操作符</th>
+                            <th>说明</th>
+                            <th>示例</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>In</strong></td>
+                            <td>标签值在列表中</td>
+                            <td><code>disktype in (ssd, hdd)</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>NotIn</strong></td>
+                            <td>标签值不在列表中</td>
+                            <td><code>disktype notin (ssd)</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Exists</strong></td>
+                            <td>标签存在</td>
+                            <td><code>disktype</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>DoesNotExist</strong></td>
+                            <td>标签不存在</td>
+                            <td><code>!disktype</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Gt</strong></td>
+                            <td>标签值大于指定值</td>
+                            <td><code>memory > 16Gi</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Lt</strong></td>
+                            <td>标签值小于指定值</td>
+                            <td><code>memory < 32Gi</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Pod 亲和性 -->
+            <section class="concept-section">
+                <h2>Pod 亲和性和反亲和性</h2>
+                <p>Pod 亲和性根据已运行的 Pod 的标签来调度新 Pod。</p>
+
+                <h3>Pod 亲和性类型</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>类型</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Pod Affinity</strong></td>
+                            <td>将 Pod 调度到有/没有特定 Pod 的节点</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Pod Anti-Affinity</strong></td>
+                            <td>避免将 Pod 调度到有特定 Pod 的节点</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Pod 亲和性示例</h3>
+                <pre><code># Pod 亲和性：与带有 app=frontend 标签的 Pod 在同一个节点
+apiVersion: v1
+kind: Pod
+metadata:
+  name: with-pod-affinity
+spec:
+  affinity:
+    podAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: app
+            operator: In
+            values:
+            - frontend
+        topologyKey: kubernetes.io/hostname  # 拓扑域
+  containers:
+  - name: nginx
+    image: nginx</code></pre>
+
+                <pre><code># Pod 反亲和性：不在同一个节点
+podAntiAffinity:
+  requiredDuringSchedulingIgnoredDuringExecution:
+  - labelSelector:
+      matchExpressions:
+      - key: app
+        operator: In
+        values:
+        - redis
+    topologyKey: "kubernetes.io/hostname"</code></pre>
+
+                <div class="info">
+                    <strong>拓扑域（Topology Key）</strong>定义了调度的范围。常用拓扑域包括：
+                    <ul>
+                        <li><code>kubernetes.io/hostname</code>：节点级</li>
+                        <li><code>topology.kubernetes.io/zone</code>：可用区级</li>
+                        <li><code>topology.kubernetes.io/region</code>：区域级</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- 污点和容忍度 -->
+            <section class="concept-section">
+                <h2>污点和容忍度 <span class="badge badge-primary">重要</span></h2>
+                <p>污点（Taint）和容忍度（Toleration）是节点级别的调度约束，用于控制哪些 Pod 可以调度到节点。</p>
+
+                <h3>污点和容忍度的概念</h3>
+                <div class="info">
+                    <p><strong>污点</strong>是标记在节点上的属性，排斥不匹配容忍度的 Pod。</p>
+                    <p><strong>容忍度</strong>是 Pod 的属性，允许 Pod 调度到有特定污点的节点。</p>
+                </div>
+
+                <h3>污点示例</h3>
+                <pre><code># 为节点添加污点
+kubectl taint nodes node1 key=value:NoSchedule
+kubectl taint nodes node1 key=value:PreferNoSchedule
+kubectl taint nodes node1 key=value:NoExecute
+
+# 查看节点污点
+kubectl describe node node1 | grep Taint</code></pre>
+
+                <h3>污点效果（Taint Effect）</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>效果</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>NoSchedule</strong></td>
+                            <td>如果 Pod 不容忍污点，则不会调度到节点</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PreferNoSchedule</strong></td>
+                            <td>软约束，尽量避免但不禁止</td>
+                        </tr>
+                        <tr>
+                            <td><strong>NoExecute</strong></td>
+                            <td>已调度的 Pod 如果不容忍污点，会被驱逐</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>容忍度示例</h3>
+                <pre><code># 例子1：容忍特定污点
+spec:
+  tolerations:
+  - key: "key"
+    operator: "Equal"
+    value: "value"
+    effect: "NoSchedule"
+
+# 例子2：容忍所有 key=node-role.kubernetes.io/master 的污点
+spec:
+  tolerations:
+  - key: "node-role.kubernetes.io/master"
+    operator: "Exists"
+    effect: "NoSchedule"
+
+# 例子3：容忍所有污点（不推荐）
+spec:
+  tolerations:
+  - operator: "Exists"</code></pre>
+
+                <h3>默认污点</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>污点</th>
+                            <th>节点</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>node-role.kubernetes.io/master</code></td>
+                            <td>Master/控制平面节点</td>
+                            <td>不允许普通 Pod 调度</td>
+                        </tr>
+                        <tr>
+                            <td><code>node-role.kubernetes.io/control-plane</code></td>
+                            <td>控制平面节点</td>
+                            <td>不允许普通 Pod 调度</td>
+                        </tr>
+                        <tr>
+                            <td><code>node.kubernetes.io/not-ready</code></td>
+                            <td>NotReady 状态的节点</td>
+                            <td>NoExecute，驱逐现有 Pod</td>
+                        </tr>
+                        <tr>
+                            <td><code>node.kubernetes.io/unreachable</code></td>
+                            <td>不可达的节点</td>
+                            <td>NoExecute，驱逐现有 Pod</td>
+                        </tr>
+                        <tr>
+                            <td><code>node.kubernetes.io/disk-pressure</code></td>
+                            <td>磁盘压力</td>
+                            <td>禁止调度新 Pod</td>
+                        </tr>
+                        <tr>
+                            <td><code>node.kubernetes.io/memory-pressure</code></td>
+                            <td>内存压力</td>
+                            <td>禁止调度新 Pod</td>
+                        </tr>
+                        <tr>
+                            <td><code>node.kubernetes.io/pid-pressure</code></td>
+                            <td>PID 压力</td>
+                            <td>禁止调度新 Pod</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- 拓扑传播约束 -->
+            <section class="concept-section">
+                <h2>拓扑传播约束</h2>
+                <p>拓扑传播约束（Topology Spread Constraints）控制 Pod 在不同拓扑域的分布，如确保高可用。</p>
+
+                <pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  replicas: 3
+  template:
+    spec:
+      topologySpreadConstraints:
+      - maxSkew: 1  # 最大差异
+        topologyKey: topology.kubernetes.io/zone  # 拓扑域
+        whenUnsatisfiable: DoNotSchedule  # 满足策略才调度，或 ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app: myapp
+      containers:
+      - name: myapp
+        image: myapp</code></pre>
+
+                <h3>参数说明</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>参数</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>maxSkew</strong></td>
+                            <td>不同拓扑域间 Pod 数量的最大差异</td>
+                        </tr>
+                        <tr>
+                            <td><strong>topologyKey</strong></td>
+                            <td>拓扑域标签</td>
+                        </tr>
+                        <tr>
+                            <td><strong>whenUnsatisfiable</strong></td>
+                            <td>不满足约束时的行为</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>whenUnsatisfiable</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>值</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>DoNotSchedule</strong></td>
+                            <td>不满足约束时不调度</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ScheduleAnyway</strong></td>
+                            <td>即使不满足也照常调度</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Pod 优先级和抢占 -->
+            <section class="concept-section">
+                <h2>Pod 优先级和抢占</h2>
+                <p>Pod 优先级和抢占（Pod Priority and Preemption）确保重要 Pod 在资源不足时能够运行。</p>
+
+                <h3>工作原理</h3>
+                <ul>
+                    <li><strong>PriorityClass</strong>：定义优先级类</li>
+                    <li><strong>优先级值</strong>：数值越高优先级越高</li>
+                    <li><strong>抢占</strong>：高优先级 Pod 可以抢占低优先级 Pod 的资源</li>
+                </ul>
+
+                <h3>PriorityClass 示例</h3>
+                <pre><code># 创建高优先级类
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: high-priority
+value: 1000  # 优先级值
+globalDefault: false  # 是否为默认
+description: "High priority class for important applications"</code></pre>
+
+                <pre><code># Pod 使用优先级类
+apiVersion: v1
+kind: Pod
+metadata:
+  name: important-pod
+spec:
+  priorityClassName: high-priority
+  containers:
+  - name: important
+    image: important-image</code></pre>
+
+                <h3>系统保留优先级</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>优先级类</th>
+                            <th>优先级值</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>system-cluster-critical</strong></td>
+                            <td>2000000000 (2*10^9)</td>
+                            <td>关键系统组件</td>
+                        </tr>
+                        <tr>
+                            <td><strong>system-node-critical</strong></td>
+                            <td>2000001000</td>
+                            <td>节点关键组件</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- 调度章节总结 -->
+            <section class="concept-section">
+                <h2>本章总结</h2>
+                <div class="success">
+                    <strong>关键要点：</strong>
+                    <ul>
+                        <li>Kubernetes 调度器通过预选和优选阶段完成 Pod 调度</li>
+                        <li>节点选择器用于简单的标签匹配</li>
+                        <li>节点亲和性支持硬约束和软约束</li>
+                        <li>Pod 亲和性和反亲和性根据已运行的 Pod 调度</li>
+                        <li>污点和容忍度用于控制 Pod 到节点的调度</li>
+                        <li>拓扑传播约束控制 Pod 在拓扑域的分布</li>
+                        <li>Pod 优先级和抢占确保重要 Pod 能够运行</li>
+                        <li>可以通过自定义调度器或调度框架扩展调度功能</li>
+                    </ul>
+                </div>
+
+                <div style="text-align: center; margin-top: 2rem;">
+                    <a href="cluster-admin.html" class="btn">继续学习：集群管理 →</a>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Kubernetes 核心概念学习指南 | 基于 <a href="https://kubernetes.io/docs/concepts/" target="_blank">Kubernetes 官方文档</a>整理</p>
+        </div>
+    </footer>
+</body>
+</html>

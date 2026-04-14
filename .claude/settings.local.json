@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(ls /Users/kubo/Documents/k8s_concepts/*.html | grep -E \"\\(overview|architecture|containers|workloads|networking|storage|configuration|scheduling|cluster-admin\\)\\\\.html\")",
+      "Bash(cd /Users/kubo/Documents/k8s_concepts/exam && node -e \"const q = require\\('./questions.js'\\); console.log\\('Total questions:', q.questions.length\\); console.log\\('Modules:', q.modules.join\\(', '\\)\\);\")",
+      "Bash(cd /Users/kubo/Documents/k8s_concepts/exam && wc -l *.js *.html *.css)",
+      "Bash(node -c exam.js && node -c questions.js && echo \"✓ JavaScript 语法检查通过\")",
+      "Bash(node -c exam.js && echo \"✓ JavaScript 语法检查通过\")",
+      "Bash(node -e \"\nconst { questions, modules } = require\\('./questions.js'\\);\nconsole.log\\('=== 题库统计 ==='\\);\nconsole.log\\('题目总数:', questions.length\\);\nconsole.log\\('模块数量:', modules.length\\);\nconsole.log\\('模块列表:', modules.join\\(', '\\)\\);\nconsole.log\\(\\);\nconsole.log\\('=== 各模块题目数 ==='\\);\nmodules.forEach\\(module => {\n    const count = questions.filter\\(q => q.module === module\\).length;\n    console.log\\(module + ':', count, '题'\\);\n}\\);\n\")",
+      "Bash(node -c ../exam/exam.js 2>/dev/null && echo \"✓ exam.js 语法检查通过\" && node -c ../exam/questions.js 2>/dev/null && echo \"✓ questions.js 语法检查通过\")",
+      "Bash(python3 << 'PYTHON_EOF'\nimport json\nimport copy\n\n# 原始文件\nwith open\\('/Users/kubo/Documents/k8s_concepts/exam/questions.js.backup', 'r', encoding='utf-8'\\) as f:\n    content = f.read\\(\\)\n\n# 查找数组结尾位置\nend_pos = content.rfind\\('\\\\n];\\\\n\\\\n// 提取唯一模块列表'\\)\nif end_pos == -1:\n    print\\(\"无法找到数组结尾\"\\)\n    exit\\(1\\)\n\n# 计算当前题目数量\nquestion_count = content.count\\('\"module\":'\\)\nprint\\(f\"当前题目数量: {question_count}\"\\)\n\n# 在 ] 之前插入新题目注释\ninsert_pos = content.find\\('\\\\n];', end_pos - 5\\)\nif insert_pos == -1:\n    insert_pos = content.find\\('\\\\n]', end_pos - 5\\)\n\nnew_content = content[:insert_pos] + '\\\\n\\\\n    // ========== 新模块题目已添加，共260题，待完成全部模块总计约375题 ==========' + content[insert_pos:]\n\n# 保存新内容\nwith open\\('/Users/kubo/Documents/k8s_concepts/exam/questions.js', 'w', encoding='utf-8'\\) as f:\n    f.write\\(new_content\\)\n\nprint\\(\"文件已更新注释\"\\)\nPYTHON_EOF)"
+    ]
+  }
+}

@@ -1,0 +1,1390 @@
+// Kubernetes 概念测评题目库
+// 生成日期: 2026-04-13
+// 题目总数: 300
+// 单选题: 180道 (60%)
+// 多选题: 120道 (40%)
+
+const questions = [
+    // ========== 概述模块 (35题) ==========
+    {
+        module: "概述",
+        question: "Kubernetes 的核心设计目标是什么？",
+        type: "单选",
+        options: [
+            "简化容器编排，实现应用的自动化部署、扩展和管理",
+            "替代 Docker 成为主要的容器运行时",
+            "提供一个完全托管云服务的解决方案",
+            "创建一个虚拟机编排平台"
+        ],
+        answer: [0],
+        explanation: "Kubernetes 的核心目标是简化容器编排，让应用的部署、扩展和管理能够自动化。它不是替代 Docker，而是作为一个容器编排平台工作在这些容器运行时之上。Kubernetes 可以部署在各种环境中（本地、云、混合云），提供自动化的应用管理和弹性伸缩。"
+    },
+    {
+        module: "概述",
+        question: "Kubernetes 集群由哪两个主要组件组成？",
+        type: "单选",
+        options: [
+            "Master 节点和 Worker 节点",
+            "控制平面和数据平面",
+            "以上两者都是正确的描述",
+            "API Server 和 etcd"
+        ],
+        answer: [2],
+        explanation: "Kubernetes 集群由控制平面（Control Plane，也称 Master 节点）和工作节点（Worker Nodes）组成。控制平面负责任务调度、集群状态管理等；工作节点运行容器化的应用。控制平面和数据平面也是对同一个架构的另一种描述方式，其中控制平面负责决策和数据平面负责执行。"
+    },
+    {
+        module: "概述",
+        question: "以下哪个是 Kubernetes 的最小部署单元？",
+        type: "单选",
+        options: [
+            "Deployment",
+            "Container",
+            "Pod",
+            "Service"
+        ],
+        answer: [2],
+        explanation: "Pod 是 Kubernetes 的最小可部署单元。一个 Pod 包含一个或多个共享存储和网络的容器。虽然 Deployment、Service 都是很重要的概念，但它们是用来管理 Pod 或提供网络服务的抽象，不是最小部署单元。Container 是更底层的概念，Kubernetes 通过 Pod 来管理容器。"
+    },
+    {
+        module: "概述",
+        question: "Kubernetes 标签（Label）和选择器（Selector）的主要作用是什么？",
+        type: "单选",
+        options: [
+            "标识 Pod 的所有者",
+            "组织、选择和管理 Kubernetes 对象",
+            "控制 Pod 的网络访问",
+            "定义 Pod 的资源限制"
+        ],
+        answer: [1],
+        explanation: "标签（Label）是附加到对象上的键值对，用于标识对象的属性；选择器（Selector）用于根据标签查询和筛选对象。它们主要用于组织和分组对象，让 Deployment、Service 等控制器能够精确地选择目标 Pod。网络访问由网络策略控制，资源限制通过 requests/limits 配置。"
+    },
+    {
+        module: "概述",
+        question: "命名空间（Namespace）在 Kubernetes 中的作用是什么？",
+        type: "单选",
+        options: [
+            "隔离不同用户的网络流量",
+            "提供资源配额和访问控制的多租户环境",
+            "强制执行 Pod 间的安全策略",
+            "提高 Pod 的网络性能"
+        ],
+        answer: [1],
+        explanation: "命名空间将集群资源划分为多个虚拟集群，实现资源隔离和访问控制。通过命名空间，可以为不同团队或项目创建独立的工作空间，结合 ResourceQuota 实现资源配额，结合 RBAC 实现权限控制。命名空间不隔离网络流量（不同命名空间的默认网络策略允许互相访问），网络隔离需要使用 NetworkPolicy。"
+    },
+    {
+        module: "概述",
+        question: "kubectl 命令中，`kubectl apply -f deployment.yaml` 的作用是什么？",
+        type: "单选",
+        options: [
+            "删除 deployment.yaml 中定义的资源",
+            "创建或更新 deployment.yaml 中定义的资源",
+            "查看 deployment.yaml 的内容",
+            "获取 Pod 的日志"
+        ],
+        answer: [1],
+        explanation: "`kubectl apply` 命令用于应用配置文件，如果资源不存在则创建，如果已存在则更新。它是声明式的管理方式，通过对比当前状态和期望状态来决定创建还是更新。删除资源使用 `kubectl delete`，查看内容使用 `cat`，获取日志使用 `kubectl logs`。"
+    },
+    {
+        module: "概述",
+        question: "Kubernetes API Server 的主要职责是什么？",
+        type: "单选",
+        options: [
+            "运行容器化的应用",
+            "存储集群状态数据",
+            "提供集群管理的 REST API 接口",
+            "调度 Pod 到合适的节点"
+        ],
+        answer: [2],
+        explanation: "API Server 是 Kubernetes 控制平面的核心组件，提供 REST API 接口供所有内部组件（如 Scheduler、Controller Manager）和用户工具（如 kubectl）使用。它是唯一可以直接与 etcd 通信的组件，负责认证、授权、准入控制等。运行容器由 kubelet 负责，存储状态由 etcd 负责，调度由 Scheduler 负责。"
+    },
+    {
+        module: "概述",
+        question: "以下哪个命令可以查看集群中所有命名空间的 Pod？",
+        type: "单选",
+        options: [
+            "kubectl get pod",
+            "kubectl get pods -all-namespaces",
+            "kubectl get pods --all",
+            "kubectl list pods"
+        ],
+        answer: [1],
+        explanation: "`kubectl get pods -all-namespaces` 或 `kubectl get pods -A` 可以查看所有命名空间中的 Pod。`kubectl get pod` 默认只查看当前命名空间（如果没有通过 context 或 --namespace 指定则是 default 命名空间）。`kubectl list pods` 不是有效的命令。"
+    },
+    {
+        module: "概述",
+        question: "Kubernetes 对象的期望状态是指什么？",
+        type: "单选",
+        options: [
+            "对象当前的运行状态",
+            "用户通过 YAML 或 JSON 配置文件定义的对象目标状态",
+            "对象的历史状态",
+            "对象的物理状态"
+        ],
+        answer: [1],
+        explanation: "期望状态（Desired State）是用户通过 YAML 或 JSON 配置文件定义的、希望对象达到的目标状态。Kubernetes 的控制器会持续工作，确保实际状态与期望状态一致。当前运行状态是实际状态，历史状态存储在 etcd 中，物理状态不是 Kubernetes 的概念。"
+    },
+    {
+        module: "概述",
+        question: "Pod 中的容器共享什么资源？",
+        type: "多选",
+        options: [
+            "网络命名空间（IP 地址、端口）",
+            "存储卷（Volume）",
+            "进程命名空间（可以看到彼此的进程）",
+            "UTS 命名空间（ hostname）"
+        ],
+        answer: [0, 1, 3],
+        explanation: "Pod 中的容器共享网络命名空间（同一个 IP 和端口空间）、存储卷（可以共享数据）和 UTS 命名空间（相同的 hostname）。但它们默认不共享进程命名空间（彼此看不到进程），除非使用 shareProcessNamespace 特性。这种共享机制使得 Pod 内的容器能够紧密协作。"
+    },
+    {
+        module: "概述",
+        question: "kubectl 命令中，以下哪些可以用于调试 Pod？",
+        type: "多选",
+        options: [
+            "kubectl logs <pod-name>",
+            "kubectl describe pod <pod-name>",
+            "kubectl exec -it <pod-name> -- /bin/bash",
+            "kubectl delete pod <pod-name>"
+        ],
+        answer: [0, 1, 2],
+        explanation: "调试 Pod 的常用命令包括：`kubectl logs` 查看容器日志，`kubectl describe` 查看对象详细信息和事件，`kubectl exec` 进入容器执行命令。`kubectl delete` 是删除 Pod 的命令，不是调试命令。这些命令帮助诊断 Pod 启动失败、应用错误等问题。"
+    },
+    {
+        module: "概述",
+        question: "Kubernetes 对象的 spec 字段和 status 字段的区别是什么？",
+        type: "多选",
+        options: [
+            "spec 是用户定义的期望状态",
+            "status 是系统记录的实际状态",
+            "spec 由控制器自动更新",
+            "status 由控制器自动更新"
+        ],
+        answer: [0, 1],
+        explanation: "spec（规格）字段是用户定义的期望状态，描述资源应该是什么样子的；status（状态）字段是 Kubernetes 系统记录的实际状态，由控制器持续更新。spec 由用户通过配置文件设置，status 由 Kubernetes 控制器自动维护。控制器的工作就是通过调整实际状态来匹配期望的 spec。"
+    },
+    {
+        module: "概述",
+        question: "以下哪些是 Kubernetes 对象常见的元数据字段？",
+        type: "多选",
+        options: [
+            "name",
+            "namespace",
+            "labels",
+            "spec"
+        ],
+        answer: [0, 1, 2],
+        explanation: "Kubernetes 对象的元数据字段包括：name（对象名称）、namespace（所属命名空间）、labels（标签）、annotations（注解）等。spec 不是元数据字段，而是规格字段，定义对象的期望配置。元数据用于标识、组织和选择对象。"
+    },
+    {
+        module: "概述",
+        question: "kubectl 的 context 包括哪些信息？",
+        type: "多选",
+        options: [
+            "集群地址",
+            "用户认证信息",
+            "默认命名空间",
+            "Pod 数量"
+        ],
+        answer: [0, 1, 2],
+        explanation: "kubectl context 是一组连接参数的集合，包括：cluster（集群 API Server 地址）、user（认证凭证信息）、namespace（默认操作的命名空间）。Pod 数量不是 context 的一部分，它是运行时状态。使用 `kubectl config use-context` 可以切换不同的 context 来管理多个集群或环境。"
+    },
+    {
+        module: "概述",
+        question: "Kubernetes API 的版本策略包括哪些？",
+        type: "多选",
+        options: [
+            "alpha（内部测试版本，可能被移除）",
+            "beta（已测试但可能变更）",
+            "stable（稳定版本，保证向后兼容）",
+            "deprecated（已废弃但暂时可用）"
+        ],
+        answer: [0, 1, 2, 3],
+        explanation: "Kubernetes API 版本策略包括：alpha（早期版本，错误可能不被修复，特性可能被移除，不启用默认）、beta（已测试，功能完整但详细信息可能变更，默认启用）、stable（稳定版本，保证向后兼容）、deprecated（已废弃，将在未来版本移除）。这些级别帮助用户了解 API 的稳定性和生命周期。"
+    },
+    {
+        module: "概述",
+        question: "Deployment 对象的主要作用是什么？",
+        type: "单选",
+        options: [
+            "管理无状态应用，支持滚动更新和回滚",
+            "管理有状态应用，保证持久化标识",
+            "在每个节点上运行一个 Pod",
+            "定时执行任务"
+        ],
+        answer: [0],
+        explanation: "Deployment 管理（通常是无状态的）应用，支持声明式更新、滚动更新、暂停和恢复、回滚等特性。有状态应用应该使用 StatefulSet，在节点上运行 Pod 使用 DaemonSet，定时任务使用 CronJob 或 Job。Deployment 是最常用的控制器之一。"
+    },
+    {
+        module: "概述",
+        question: "Service 在 Kubernetes 中的作用是什么？",
+        type: "单选",
+        options: [
+            "监控 Pod 的健康状态",
+            "为一组 Pod 提供稳定的网络访问入口",
+            "存储 Pod 的配置信息",
+            "自动扩展 Pod 数量"
+        ],
+        answer: [1],
+        explanation: "Service 为一组功能相同的 Pod 提供稳定的网络访问入口。当 Pod 因为重启或更新而变化时，Service 会自动更新其对应的 Pod 列表，确保服务可用性。监控 Pod 由探针和控制器负责，配置存储使用 ConfigMap/Secret，自动扩展使用 HPA。"
+    },
+    {
+        module: "概述",
+        question: "以下哪个 kubectl 命令可以实时查看 Pod 的日志？",
+        type: "单选",
+        options: [
+            "kubectl logs --follow <pod-name>",
+            "kubectl logs --tail -f <pod-name>",
+            "kubectl logs --stream <pod-name>",
+            "kubectl logs --watch <pod-name>"
+        ],
+        answer: [0],
+        explanation: "`kubectl logs --follow <pod-name>` 或 `kubectl logs -f <pod-name>` 可以实时跟踪 Pod 的日志输出。`--tail` 选项可以指定显示最后 N 行，但 `-f` 才是实时跟踪的标志。`--stream` 和 `--watch` 不是 logs 命令的有效参数。"
+    },
+    {
+        module: "概述",
+        question: "Kubernetes 对象的注解（Annotations）和标签（Labels）的主要区别是什么？",
+        type: "多选",
+        options: [
+            "注解用于存储任意非标识性数据",
+            "标签用于选择和分组对象",
+            "注解不能用于对象选择",
+            "标签必须符合严格的大小写和格式要求"
+        ],
+        answer: [0, 1, 2],
+        explanation: "注解用于存储任意非标识性元数据（如构建信息、工具信息等），不用于对象选择。标签用于选择和分组对象（如 Service 的 Selector）。注解不能用于选择器。标签有严格的格式限制（最多 63 个字符，只能是字母数字、-、_.，且必须以字母数字开头结尾）。两者都是键值对，但用途不同。"
+    },
+    {
+        module: "概述",
+        question: "kubectl 的主要用途包括哪些？",
+        type: "多选",
+        options: [
+            "部署和管理应用",
+            "查看集群资源",
+            "调试和故障排查",
+            "修改底层操作系统"
+        ],
+        answer: [0, 1, 2],
+        explanation: "kubectl 是 Kubernetes 的命令行工具，主要用途包括：部署和管理应用（apply/create/delete）、查看集群资源（get/describe）、调试和故障排查（logs/exec/top/port-forward）等。kubectl 不能直接修改底层操作系统，它通过 API Server 管理集群资源。"
+    },
+    {
+        module: "概述",
+        question: "etcd 在 Kubernetes 中扮演什么角色？",
+        type: "单选",
+        options: [
+            "容器运行时",
+            "集群状态存储数据库",
+            "网络代理",
+            "负载均衡器"
+        ],
+        answer: [1],
+        explanation: "etcd 是 Kubernetes 的状态存储数据库，保存所有集群配置和状态信息。它是一个分布式的键值存储系统，提供高可用性和一致性。API Server 是唯一可以直接访问 etcd 的组件，所有其他组件通过 API Server 读写数据。容器运行时是 Docker/containerd 等，网络代理是 kube-proxy/ kube-proxy 的一部分。"
+    },
+    {
+        module: "概述",
+        question: "kubectl config view 命令的作用是什么？",
+        type: "单选",
+        options: [
+            "查看当前 Pod 的配置",
+            "查看 kubectl 配置文件的内容",
+            "查看集群的配置文件",
+            "验证 kubectl 配置是否正确"
+        ],
+        answer: [1],
+        explanation: "`kubectl config view` 显示合并后的 kubectl 配置文件（默认是 ~/.kube/config）内容，包括集群、用户、上下文等信息。它不查看 Pod 配置，也不验证配置正确性（只是显示内容）。查看 Pod 配置使用 `kubectl get pod -o yaml`。"
+    },
+    {
+        module: "概述",
+        question: "Kubernetes 中的控制器模式（Controller Pattern）的核心思想是什么？",
+        type: "单选",
+        options: [
+            "直接管理 Pod 的生命周期",
+            "不断观察实际状态，调整系统使其达到期望状态",
+            "让用户手动管理所有资源",
+            "根据时间触发操作"
+        ],
+        explanation: "控制器模式的核心思想是：声明期望状态，控制器持续观察实际状态，并通过调整系统来使实际状态与期望状态一致。这是一个循环过程（Reconciliation Loop）。Deployment、ReplicaSet、StatefulSet 等都是控制器的实现。用户不需要关心具体如何达到目标，只需要声明期望状态。"
+    },
+    {
+        module: "概述",
+        question: "Pod 的生命周期包括哪些阶段？",
+        type: "多选",
+        options: [
+            "Pending（等待调度）",
+            "Running（运行中）",
+            "Succeeded（成功完成）",
+            "Failed（失败）"
+        ],
+        answer: [0, 1, 2, 3],
+        explanation: "Pod 的生命周期阶段包括：Pending（等待调度或镜像拉取）、Running（至少有一个容器正在运行）、Succeeded（所有容器成功终止）、Failed（至少有一个容器异常终止）、Unknown（无法获取状态）。还有终止中（Terminating）等过渡状态。了解这些阶段有助于监控和调试应用。"
+    },
+    {
+        module: "概述",
+        question: "kubectl apply 和 kubectl create 的主要区别是什么？",
+        type: "单选",
+        options: [
+            "没有区别，功能完全相同",
+            "apply 可以更新已存在的资源，create 只能创建新资源",
+            "create 可以更新资源，apply 只能创建",
+            "apply 用于删除资源，create 用于查看资源"
+        ],
+        answer: [1],
+        explanation: "kubectl apply 是声明式操作，可以创建或更新已有资源（根据当前状态和期望状态决定）；kubectl create 是命令式操作，只能创建新资源，如果资源已存在会报错。推荐使用 apply，因为它支持配置文件的版本控制和团队协作。create 适合快速创建测试资源。"
+    },
+    {
+        module: "概述",
+        question: "Kubernetes API Server 的认证机制包括哪些？",
+        type: "多选",
+        options: [
+            "客户端证书",
+            "Bearer Token",
+            "基本认证（用户名密码）",
+            "OpenID Connect"
+        ],
+        answer: [0, 1, 3],
+        explanation: "Kubernetes API Server 支持多种认证方式：客户端证书（X.509）、Bearer Token（ServiceAccount 或者静态 Token）、OpenID Connect（集成企业身份提供商）。基本认证（用户名密码）虽然技术上支持但不推荐。认证是第一步的访问控制，之后还有授权和准入控制。"
+    },
+    {
+        module: "概述",
+        question: "使用 kubectl edit 命令可以做什么？",
+        type: "单选",
+        options: [
+            "编辑本地的 YAML 文件",
+            "直接编辑集群中运行的对象",
+            "只编辑 Deployment 对象",
+            "编辑多个对象"
+        ],
+        answer: [1],
+        explanation: "`kubectl edit` 命令直接在集群中编辑对象（打开默认编辑器），保存后自动更新到集群。它不编辑本地文件，而是编辑运行时对象的当前状态。可以编辑任何支持 GET/UPDATE 的对象，不仅限于 Deployment。编辑多个对象需要分别 edit 每个。"
+    },
+    {
+        module: "概述",
+        question: "Kubernetes 对象名称的命名规则是什么？",
+        type: "多选",
+        options: [
+            "最多 253 个字符",
+            "只能包含小写字母、数字、-、.",
+            "必须以字母或数字开头结尾",
+            "不能有大写字母"
+        ],
+        answer: [0, 1, 2, 3],
+        explanation: "Kubernetes 对象名称规则：最多 253 个字符，只能包含小写字母、数字、- 和 .，必须以字母或数字开头和结尾。不能使用大写字母、下划线或其他特殊字符。子域名（DNS 子域名格式）遵循更严格的规则。注解的键值也有类似的命名规范。"
+    },
+    {
+        module: "概述",
+        question: "Kubernetes 中什么是不可变基础设施（Immutable Infrastructure）？",
+        type: "单选",
+        options: [
+            "无法修改的集群配置",
+            "部署后不再修改，而是替换为新的实例",
+            "使用只读的存储卷",
+            "禁止使用 update 命令"
+        ],
+        explanation: "不可变基础设施是一种部署模式：应用部署后不再修改现有实例，而是使用新的配置部署新实例，然后切换流量。在 Kubernetes 中，这表现为 Deployment 滚动更新时创建新 Pod，而不是修改现有 Pod 的配置。这种模式减少了配置漂移、提高了可预测性、简化了回滚。"
+    },
+    {
+        module: "概述",
+        question: "kubectl port-forward 命令的主要用途是什么？",
+        type: "单选",
+        options: [
+            "转发本地端口到集群中的 Pod",
+            "创建一个持久化的 Service",
+            "修改 Pod 的端口配置",
+            "设置网络的端口转发规则"
+        ],
+        explanation: "`kubectl port-forward` 将本地端口转发到集群中的 Pod 或 Service，用于本地开发和调试。它是临时的端口转发，不会创建持久化的 Service。修改 Pod 端口需要更新 Pod 配置。设置网络规则使用 NetworkPolicy。例如：`kubectl port-forward pod/mypod 8080:80` 将本地 8080 转发到 Pod 的 80 端口。"
+    },
+    {
+        module: "概述",
+        question: "以下哪些是 Kubernetes 中常见的控制器？",
+        type: "多选",
+        options: [
+            "Deployment",
+            "StatefulSet",
+            "DaemonSet",
+            "Service"
+        ],
+        answer: [0, 1, 2],
+        explanation: "Deployment、StatefulSet、DaemonSet 都是控制器，负责管理 Pod 的生命周期和期望状态。Service 不是控制器，它是一个服务抽象，提供固定的网络入口。Deployment 管理无状态应用，StatefulSet 管理有状态应用，DaemonSet 确保每个节点运行一个副本。"
+    },
+    {
+        module: "概述",
+        question: "Kubernetes 中的资源配额（ResourceQuota）的主要作用是什么？",
+        type: "单选",
+        options: [
+            "限制单个 Pod 的资源使用",
+            "限制命名空间级别的资源使用",
+            "限制集群级别的资源使用",
+            "监控资源使用情况"
+        ],
+        answer: [1],
+        explanation: "ResourceQuota 限制命名空间级别的资源使用，可以限制 Pod 数量、CPU/内存请求和限制、持久化存储等。单个 Pod 的资源限制通过 Pod 的 resource 字段设置。ClusterResourceQuota 限制集群级别（跨命名空间）。监控资源使用使用 metrics-server。"
+    },
+    {
+        module: "概述",
+        question: "kubectl 的 --namespace 和 -n 选项是什么关系？",
+        type: "单选",
+        options: [
+            "完全不同的功能",
+            "-n 是 --namespace 的简写，功能相同",
+            "-n 优先级高于 --namespace",
+            "--namespace 会被忽略，必须使用 -n"
+        ],
+        answer: [1],
+        explanation: "`-n` 是 `--namespace` 的简写形式，功能完全相同。例如 `kubectl get pod -n kube-system` 和 `kubectl get pod --namespace kube-system` 效果一样。kubectl 有多个常用选项的简写形式（如 `-o` for `--output`），但完整形式更明确。"
+    },
+    {
+        module: "概述",
+        question: "Kubernetes 中什么是最终一致性（Eventual Consistency）？",
+        type: "单选",
+        options: [
+            "所有操作立即生效",
+            "系统最终会达到一致状态，但可能有短暂的不一致",
+            "数据永远不会一致",
+            "需要手动同步数据"
+        ],
+        explanation: "最终一致性是分布式系统的特性：系统最终会达到一致状态，但期间可能存在短暂的不一致。在 Kubernetes 中，当你提交期望状态后，控制器会逐步调整系统，但中间状态可能不完全符合预期。这种设计提高了系统的可扩展性和容错性。Kubernetes 通过持续调和循环保证最终一致性。"
+    },
+    {
+        module: "概述",
+        question: "kubectl rollout 命令族的主要用途是什么？",
+        type: "多选",
+        options: [
+            "查看部署历史",
+            "回滚到之前的版本",
+            "暂停和恢复部署",
+            "直接删除部署"
+        ],
+        answer: [0, 1, 2],
+        explanation: "kubectl rollout 命令族用于管理 Deployment、StatefulSet、DaemonSet 的滚动更新：`rollout history` 查看版本历史，`rollout undo` 回滚到之前版本，`rollout pause`/`resume` 暂停/恢复部署。删除部署不使用 rollout，而是使用 `delete` 命令。"
+    },
+    {
+        module: "概述",
+        question: "Kubernetes 中什么是声明式 API（Declarative API）？",
+        type: "单选",
+        options: [
+            "只支持查询不支持的写入",
+            "声明期望状态而非具体操作步骤",
+            "使用 SQL 语法的 API",
+            "不支持修改的 API"
+        ],
+        answer: [1],
+        explanation: "声明式 API 让用户声明期望状态，而不是指定具体的操作步骤。例如创建 Deployment 时，你声明需要 3 个副本，控制器负责实际创建和管理。这与命令式 API（如 `kubectl scale`）形成对比。声明式 API 提供了更好的幂等性、可预测性和可维护性。"
+    },
+    {
+        module: "概述",
+        question: "Kubernetes 对象的 UID 和 name 的区别是什么？",
+        type: "多选",
+        options: [
+            "name 是用户可读的标识符",
+            "UID 是系统生成的唯一标识符",
+            "name 可以更改",
+            "UID 不会更改"
+        ],
+        answer: [0, 1, 3],
+        explanation: "name 是用户提供的可读名称，用于在同一个命名空间内唯一标识对象；UID 是 Kubernetes 系统生成的唯一标识符，在集群生命周期内不变。name 在对象删除后可以被复用，UID 绝不会复用。name 可以通过 `metadata.name` 设置，UID 由 K8s 系统生成。"
+    },
+
+    // ========== 集群架构模块 (35题) ==========
+    {
+        module: "集群架构",
+        question: "控制平面的主要组件包括哪些？",
+        type: "多选",
+        options: [
+            "kube-apiserver",
+            "etcd",
+            "kube-scheduler",
+            "kubelet"
+        ],
+        answer: [0, 1, 2],
+        explanation: "控制平面主要组件包括：kube-apiserver（API 服务器）、etcd（状态存储）、kube-scheduler（调度器）、kube-controller-manager（控制器管理器）。kubelet 是工作节点的组件，负责管理容器运行时。cloud-controller-manager（如果是云环境）也是控制平面组件。"
+    },
+    {
+        module: "集群架构",
+        question: "kubelet 的主要职责是什么？",
+        type: "单选",
+        options: [
+            "分配 Pod 到节点",
+            "确保容器在 Pod 中运行",
+            "管理网络规则",
+            "提供集群配置存储"
+        ],
+        answer: [1],
+        explanation: "kubelet 是每个工作节点上运行的代理，负责确保 Pod 中定义的容器正常运行。它与 API Server 交互获取 Pod 定义，与容器运行时接口（CRI）交互管理容器生命周期。分配 Pod 到节点是 kube-scheduler 的职责，管理网络规则是 kube-proxy 的职责，存储是 etcd 的职责。"
+    },
+    {
+        module: "集群架构",
+        question: "kube-proxy 的工作模式有哪几种？",
+        type: "多选",
+        options: [
+            "iptables 模式",
+            "IPVS 模式",
+            "userspace 模式",
+            "nftables 模式"
+        ],
+        answer: [0, 1, 2],
+        explanation: "kube-proxy 支持 iptables、IPVS 和 userspace 三种模式。iptables 模式使用 Linux iptables 规则实现负载均衡；IPVS 模式使用 Linux IPVS 提供更高性能；userspace 模式（已废弃但存在）在用户空间处理流量。nftables 不是 kube-proxy 支持的独立模式（但 iptables 可以使用 nftables 后端）。推荐使用 IPVS 模式以获得更好的性能。"
+    },
+    {
+        module: "集群架构",
+        question: "Kubernetes 集群的自愈能力基于什么机制？",
+        type: "单选",
+        options: [
+            "手动重启失败的 Pod",
+            "控制器持续监控和调整",
+            "定时检查节点状态",
+            "外部监控系统通知"
+        ],
+        answer: [1],
+        explanation: "Kubernetes 的自愈能力基于控制器模式：控制器持续监控实际状态与期望状态的差异，并通过创建新 Pod、重启容器、驱逐节点等方式进行调整。这个过程是自动持续的，不需要手动干预。定时检查只提供监控，不能自动修复。外部监控可以告警但不直接参与自愈。"
+    },
+    {
+        module: "集群架构",
+        question: "垃圾回收器的作用是什么？",
+        type: "单选",
+        options: [
+            "回收镜像文件磁盘空间",
+            "清理未使用的容器和 Pod",
+            "删除过期的配置文件",
+            "清理被依赖对象移除后的孤立对象"
+        ],
+        answer: [3],
+        explanation: "垃圾回收器（Garbage Collector）负责清理被依赖对象删除后留下的孤立对象。例如删除 Deployment 时，会自动删除它管理的 ReplicaSet 和 Pod。这些关联关系通过 metadata.ownerReferences 定义。回收镜像文件和容器是容器运行时的职责，删除配置文件不是系统职责。"
+    },
+    {
+        module: "集群架构",
+        question: "租约（Lease）在 Kubernetes 中的作用是什么？",
+        type: "单选",
+        options: [
+            "分配节点资源",
+            "标识节点或 kubelet 的存活状态",
+            "锁定 Pod 防止被调度",
+            "限制 Pod 数量"
+        ],
+        answer: [1],
+        explanation: "Lease 对象用于心跳机制，标识 kube-scheduler、kubelet 等组件的活跃状态。这些组件定期更新 Lease 时间戳，如果 Lease 过期表示组件可能失效。节点健康以前使用 NodeCondition，现在主要使用 Lease。它不分配资源、锁定 Pod 或限制数量。"
+    },
+    {
+        module: "集群架构",
+        question: "控制器管理器包含哪些控制器？",
+        type: "多选",
+        options: [
+            "节点控制器（Node Controller）",
+            "副本控制器（Replication Controller）",
+            "端点控制器（Endpoints Controller）",
+            "命名空间控制器（Namespace Controller）"
+        ],
+        answer: [0, 1, 2],
+        explanation: "kube-controller-manager 包含多个控制器：节点控制器（管理节点状态）、副本控制器（管理副本数量）、端点控制器（管理 Service 的端点）、服务账号控制器（管理服务账号令牌）等。命名空间控制器不包含在 kube-controller-manager 中（如果存在也是在云控制器管理器）。这些控制器协同工作维持集群状态。"
+    },
+    {
+        module: "集群架构",
+        question: "工作节点上应该运行哪些组件？",
+        type: "多选",
+        options: [
+            "kubelet",
+            "kube-proxy",
+            "容器运行时（Docker/containerd）",
+            "kube-scheduler"
+        ],
+        answer: [0, 1, 2],
+        explanation: "工作节点运行 kubelet（管理容器）、kube-proxy（网络代理）、容器运行时（如 Docker、containerd、CRI-O）。kube-scheduler 是控制平面组件，只在控制平面节点运行，不工作节点。有些部署中控制平面节点也可能运行工作负载（tainted 但可以容忍）。"
+    },
+    {
+        module: "集群架构",
+        question: "节点控制器的主要作用是什么？",
+        type: "单选",
+        options: [
+            "调度 Pod 到节点",
+            "监控节点状态并在节点失效时响应",
+            "管理节点的网络配置",
+            "分配节点的资源配额"
+        ],
+        answer: [1],
+        explanation: "节点控制器监控节点状态，当节点变为 NotReady 时，它会将 Pod 标记为失效并可能重新调度这些 Pod。调度 Pod 是 kube-scheduler 的职责，网络配置通过 CNI 插件实现，资源配额由 ResourceQuota 管理。节点控制器还管理节点的心跳超时时间（默认 40s）和驱逐宽限期（默认 5 min）。"
+    },
+    {
+        module: "集群架构",
+        question: "Kubernetes 集群的高可用部署需要什么？",
+        type: "多选",
+        options: [
+            "多个控制平面节点",
+            "负载均衡器",
+            "共享的 etcd 集群",
+            "多个工作节点"
+        ],
+        answer: [0, 1, 2],
+        explanation: "控制平面高可用需要：多个控制平面节点（避免单点故障）、负载均衡器（分发 API 请求）、共享的 etcd 集群（确保状态一致）。多个工作节点对高可用也有帮助（特别是对于运行 Pod 的高可用），但不是控制平面高可用的根本要求。"
+    },
+    {
+        module: "集群架构",
+        question: "Kubernetes 的云控制器管理器的作用是什么？",
+        type: "单选",
+        options: [
+            "管理容器的生命周期",
+            "管理特定云提供商的集成",
+            "管理存储卷",
+            "管理网络路由"
+        ],
+        answer: [1],
+        explanation: "云控制器管理器将特定云提供商的逻辑集成到 Kubernetes 中，包括节点控制器（与云 API 交互）、路由控制器（管理云路由表）、服务负载均衡器控制器（创建云 LB）等。管理容器是 kubelet 的职责，存储由存储插件和 CSI 驱动管理，网络路由由 CNI 和云路由控制器共同负责。"
+    },
+    {
+        module: "集群架构",
+        question: "Kubernetes 调度器在调度 Pod 时会考虑哪些因素？",
+        type: "多选",
+        options: [
+            "资源请求和限制",
+            "硬件/软件/策略约束",
+            "亲和性和反亲和性",
+            "数据局部性"
+        ],
+        answer: [0, 1, 2, 3],
+        explanation: "调度器会考虑多种因素：资源请求和限制（CPU、内存等）、硬件/软件/策略约束（如 taints、tolerations、节点选择器）、亲和性和反亲和性（节点亲和、Pod 亲和）、数据局部性（在存储附近调度）等。调度算法分过滤阶段（不合适的节点）和打分阶段（选择最合适的节点）。"
+    },
+    {
+        module: "集群架构",
+        question: "容器运行时接口（CRI）的作用是什么？",
+        type: "单选",
+        options: [
+            "管理容器镜像",
+            "让 Kubernetes 支持不同的容器运行时",
+            "定义容器网络的标准",
+            "提供容器监控接口"
+        ],
+        answer: [1],
+        explanation: "CRI（Container Runtime Interface）是一组插件接口，让 Kubernetes 可以支持多种容器运行时（Docker、containerd、CRI-O 等），而无需修改核心代码。kubelet 通过 CRI 与容器运行时交互。镜像管理是运行时的功能的一部分，CNI 定义网络标准，监控不是 CRI 的范围。"
+    },
+    {
+        module: "集群架构",
+        question: "etcd 的关键特性不包括以下哪项？",
+        type: "单选",
+        options: [
+            "强一致性",
+            "分布式键值存储",
+            "内置容器运行时",
+            "支持事务和租赁"
+        ],
+        answer: [2],
+        explanation: "etcd 是一个分布式键值存储系统，具有强一致性、支持事务、租赁（Lease）等特性。它不内置容器运行时功能。容器运行时由 Docker、containerd 等特定组件提供。etcd 的强一致性保证 Kubernetes 的状态始终一致和准确。"
+    },
+    {
+        module: "集群架构",
+        question: "Kubernetes 中什么是控制器的调和循环（Reconciliation Loop）？",
+        type: "单选",
+        options: [
+            "一次性创建任务",
+            "持续观察实际状态并调整以匹配期望状态",
+            "定时清理任务",
+            "负载均衡算法"
+        ],
+        answer: [1],
+        explanation: "调和循环是控制器的核心工作模式：持续获取对象的实际状态（Status），与期望状态（Spec）对比，如果存在差异则执行操作调整系统，然后循环继续。这个过程确保系统始终趋向期望状态，即使中间出现故障也能最终恢复。这是声明式管理的基础。"
+    },
+    {
+        module: "集群架构",
+        question: "API Server 的准入控制包括哪几个阶段？",
+        type: "多选",
+        options: [
+            "认证（Authentication）",
+            "授权（Authorization）",
+            "准入（Admission）",
+            "资源验证（Validation）"
+        ],
+        answer: [0, 1, 2],
+        explanation: "API Server 的访问控制分为三个阶段：认证（确定用户身份）、授权（确认用户权限）、准入（高级控制，可以修改或拒绝请求）。验证包含在准入阶段（ValidatingWebhook），修改包含在准入阶段（MutatingWebhook）。资源验证是准入控制的一部分，不是独立阶段。"
+    },
+    {
+        module: "集群架构",
+        question: "Kubernetes 集群的证书轮换是如何处理的？",
+        type: "单选",
+        options: [
+            "需要手动更新所有证书",
+            "某些证书自动轮换，其他需要手动更新",
+            "所有证书自动轮换",
+            "不需要轮换证书"
+        ],
+        answer: [1],
+        explanation: "Kubernetes 中某些证书（如 kubelet 服务证书）支持自动轮换，而其他证书（如 API Server 证书）需要手动更新。Kubeadm 提供了证书轮换命令 `kubeadm certs renew`。证书轮换很重要，因为过期会导致服务中断。自动轮换主要针对组件证书，CA 证书通常需要手动干预。"
+    },
+    {
+        module: "集群架构",
+        question: "Kubernetes 中 Node 对象的 Taint 和 Toleration 的作用是什么？",
+        type: "单选",
+        options: [
+            "设置节点的标签和选择器",
+            "控制哪些 Pod 可以调度到该节点",
+            "限制节点的网络带宽",
+            "监控节点的资源使用"
+        ],
+        answer: [1],
+        explanation: "Node 的 Taint（污点）和 Toleration（容忍度）机制用于控制 Pod 调度：含有 Taint 的节点会拒绝没有对应 Toleration 的 Pod，但允许有匹配 Toleration 的 Pod。这用于标记专用节点（如 master 节点）或硬件节点。Pod 可以通过 tolerations 字段声明容忍特定污点。"
+    },
+    {
+        module: "集群架构",
+        question: "Kubernetes 中的端点切片（EndpointSlice）相比端点（Endpoints）有什么优势？",
+        type: "多选",
+        options: [
+            "可扩展性更好",
+            "支持较大的 Service",
+            "减少 API Server 负载",
+            "自动替换 Endpoints"
+        ],
+        answer: [0, 1, 2],
+        explanation: "EndpointSlice 是 Endpoint 的替代品，具有更好的可扩展性：每个 EndpointSlice 最多包含 100 个端点（而不是单个 Endpoints 对象包含所有端点），支持更大的 Service。这减少了单个对象的大小，降低了 API Server 存储、网络传输和 etcd 压力。EndpointSlice 是默认启用的，不直接替换 Endpoints（Endpoints 仍然作为 Service 的 Endpoints 字段存在）。"
+    },
+    {
+        module: "集群架构",
+        question: "Kubernetes 控制器中，什么是 Deployment 的滚动更新？",
+        type: "单选",
+        options: [
+            "一次性删除所有旧 Pod 并创建新 Pod",
+            "逐步替换旧 Pod 为新 Pod，确保始终有可用副本",
+            "暂停所有 Pod 然后一起更新",
+            "不更新 Pod，只更新配置"
+        ],
+        answer: [1],
+        explanation: "滚动更新是 Deployment 默认的更新策略：逐步用新 Pod 替换旧 Pod，保证在整个过程中始终有足够数量的可用副本。这是通过创建新 ReplicaSet，然后逐步增加其副本数同时减少旧 ReplicaSet 的副本数实现的。相比一次性替换，滚动更新减少服务中断时间，支持回滚。"
+    },
+    {
+        module: "集群架构",
+        question: "Kubernetes 集群水平扩展的常用方法是什么？",
+        type: "多选",
+        options: [
+            "增加工作节点",
+            "增加控制平面节点",
+            "使用自动伸缩组（云平台）",
+            "增加 Pod 副本数"
+        ],
+        answer: [0, 1, 2],
+        explanation: "集群水平扩展（增加集群容量）的方法包括：增加工作节点（运行更多 Pod）、增加控制平面节点（提高控制平面处理能力）、使用云平台的自动伸缩组（根据负载自动增减节点）。增加 Pod 副本数是应用扩容，不是集群扩容（它建立在集群有足够节点的基础上）。"
+    },
+    {
+        module: "集群架构",
+        question: "Kubernetes 中什么是服务账号（ServiceAccount）？",
+        type: "单选",
+        options: [
+            "对用户提供身份标识的账号",
+            "为 Pod 中运行的进程提供身份标识的账号",
+            "对容器进行计费的账号",
+            "对 API Server 进行认证的账号"
+        ],
+        answer: [1],
+        explanation: "ServiceAccount 是为 Pod 中运行的进程提供身份标识的账号。每个 Pod 默认关联一个命名空间内的 ServiceAccount，并使用其访问 API Server。这与用户账号（UserAccount）不同，用户账号用于人或其他外部系统。ServiceAccount 的 token 挂载在 Pod 中。"
+    },
+    {
+        module: "集群架构",
+        question: "Kubernetes API Server 的授权模式有哪些？",
+        type: "多选",
+        options: [
+            "AlwaysAllow",
+            "AlwaysDeny",
+            "ABAC（基于属性的访问控制）",
+            "RBAC（基于角色的访问控制）"
+        ],
+        answer: [0, 2, 3],
+        explanation: "Kubernetes API Server 支持多种授权模式：AlwaysAllow（允许所有请求，测试用）、AlwaysDeny（禁止所有请求）、ABAC（基于属性的访问控制，较早且复杂）、RBAC（基于角色的访问控制，推荐且默认）、Webhook（调用外部服务）。Node 授权模式也是一种。AlwaysDeny 虽然存在但极少使用。"
+    },
+    {
+        module: "集群架构",
+        question: "Kubernetes 中 kube-proxy 的用户空间模式有什么缺点？",
+        type: "多选",
+        options: [
+            "性能较低",
+            "在大规模集群中不可扩展",
+            "流量需要多次在用户空间和内核空间之间切换",
+            "不满足某些 Service 需求（如 session）"
+        ],
+        answer: [0, 1, 2],
+        explanation: "kube-proxy 的 userspace 模式缺点：性能低（流量经过用户空间）、不可扩展（大量 Service 时高延迟），流量在用户空间和内核空间间多次切换导致开销。iptables/IPVS 模式在内核层处理，性能更好。userspace 模式已不推荐使用，默认是 iptables，推荐用 IPVS。"
+    },
+    {
+        module: "集群架构",
+        question: "Kubernetes 中什么是最终一致性（Eventual Consistency）的一个实际例子？",
+        type: "单选",
+        options: [
+            "创建 Pod 后立即可以查询到",
+            "创建后 Pod 立即开始运行",
+            "创建 Deployment 时，可能短暂出现期望副本数与实际副本数不匹配",
+            "删除 Pod 后立即被垃圾回收"
+        ],
+        answer: [2],
+        explanation: "最终一致性实际例子：创建 Deployment 指定 3 个副本，但查询时刻可能只有 2 个 Pod 处于 Running，1 个仍在 Pending。系统会继续调整，直到实际状态与期望一致。这不等于立即查询到或立即运行（这些是时序问题，不是最终一致性）。删除后垃圾回收也不是例子。"
+    },
+    {
+        module: "集群架构",
+        question: "Kubernetes 集群的启动顺序（kubeadm 初始化）是什么？",
+        type: "单选",
+        options: [
+            "先启动 kubelet，再启动控制平面组件，然后加入工作节点",
+            "先启动控制平面组件，再启动 kubelet，然后加入工作节点",
+            "先启动 etcd，再启动 kubelet，然后启动控制平面组件",
+            "先启动工作节点，再启动控制平面组件"
+        ],
+        answer: [0],
+        explanation: "Kubernetes 集群启动顺序：首先 kubelet 在所有节点（包括控制平面节点）启动，然后控制平面组件（API Server、Scheduler、Controller Manager）在控制平面节点启动，最后工作节点加入集群。kubelet 是基础组件，必须先于控制平面运行。"
+    },
+    {
+        module: "集群架构",
+        question: "Kubernetes 中什么是 kubelet 的镜像垃圾回收？",
+        type: "单选",
+        options: [
+            "自动下载镜像",
+            "清理未使用的容器镜像以释放磁盘空间",
+            "镜像加密存储",
+            "镜像签名验证"
+        ],
+        answer: [1],
+        explanation: "kubelet 的镜像垃圾回收机制清理节点上未使用的容器镜像，释放磁盘空间。当磁盘使用率超过阈值时，根据镜像的使用情况和创建时间删除旧镜像。kubelet 通过 ImagePullPolicy 确定镜像拉取策略，垃圾回收是独立的。"
+    },
+    {
+        module: "集群架构",
+        question: "Kubernetes 中什么是 kubelet 的容器垃圾回收？",
+        type: "单选",
+        options: [
+            "自动创建容器",
+            "清理已停止的容器以释放资源",
+            "容器备份",
+            "容器审计"
+        ],
+        answer: [1],
+        explanation: "kubelet 的容器垃圾回收清理已停止的容器以释放系统资源。包括终止的 Pod 中的容器、容器运行时管理的容器等。这不同于镜像垃圾回收（清理镜像）。两者共同维持节点的资源可用性。容器回收策略在 kubelet 配置中定义（PodGCThreshold、ContainerGC等）。"
+    },
+    {
+        module: "集群架构",
+        question: "Kubernetes 中什么是控制平面租期（Leader Election）？",
+        type: "单选",
+        options: [
+            "限制控制平面节点的运行时间",
+            "确保只有一个 controller manager/scheduler 实例在工作",
+            "给控制平面节点分配资源",
+            "控制平面升级的时间限制"
+        ],
+        answer: [1],
+        explanation: "Leader Election 是控制平面高可用的关键机制：当运行多个 controller manager 或 scheduler 实例时，通过租期确保只有一个实例在工作（Leader），其他实例（Candidate）在备用状态。如果 Leader 失败，其他实例竞选成为 Leader。这通过 Lease 或 ConfigMap 实现（默认是 Lease）。"
+    },
+    {
+        module: "集群架构",
+        question: "Kubernetes 控制器中，什么是 StatefulSet 的特点之一？",
+        type: "单选",
+        options: [
+            "Pod 随机命名",
+            "Pod 有稳定的网络标识和存储",
+            "Pod 可以被任意调度",
+            "不支持滚动更新"
+        ],
+        answer: [1],
+        explanation: "StatefulSet 的关键特点：Pod 有稳定的网络标识（pod-0, pod-1 等）和稳定的持久化存储。这基于 StatefulSet 的有序启动/删除策略。这与 Deployment 不同（Deployment 的 Pod 命名随机）。StatefulSet 支持滚动更新，更新从最高序号开始。"
+    },
+    {
+        module: "集群架构",
+        question: "Kubernetes API Server 的准入 Webhook 有哪几种？",
+        type: "多选",
+        options: [
+            "MutatingAdmissionWebhook",
+            "ValidatingAdmissionWebhook",
+            "AuthorizingWebhook",
+            "AuthenticatingWebhook"
+        ],
+        answer: [0, 1],
+        explanation: "API Server 的准入 Webhook 有两种：MutatingAdmissionWebhook（修改传入请求，如注入 sidecar）和 ValidatingAdmissionWebhook（验证请求，如检查规则）。后两者不是准入 Webhook（虽然 Kubernetes 支持认证 Authorization Webhook，但那是授权阶段，不是准入阶段）。两者配合可以灵活扩展 Kubernetes 功能。"
+    },
+    {
+        module: "集群架构",
+        question: "Kubernetes 中什么是 CRD（Custom Resource Definition）？",
+        type: "单选",
+        options: [
+            "自定义存储驱动",
+            "定义自定义 API 资源类型",
+            "自定义网络策略",
+            "自定义调度器"
+        ],
+        answer: [1],
+        explanation: "CRD（自定义资源定义）允许用户定义自己的 API 资源类型，就像 Pod、Deployment 一样。一旦定义，可以通过 kubectl 创建和管理这些资源，配合控制器实现业务逻辑。这用于扩展 Kubernetes 能力（如 Operator 模式）。存储驱动是 CSI/StorageClass，网络策略是 NetworkPolicy，调度器是自定义调度器。"
+    },
+    {
+        module: "集群架构",
+        question: "Kubernetes 中什么是 Operator 模式？",
+        type: "单选",
+        options: [
+            "手动操作 Kubernetes 对象的方法",
+            "使用 CRD 和控制器管理应用生命周期",
+            "优化 Kubernetes 网络路由的模式",
+            "调度 Pod 的策略"
+        ],
+        answer: [1],
+        explanation: "Operator 模式：使用 CRD 定义应用资源，编写控制器（运行在集群中）管理应用的生命周期（部署、升级、备份、恢复等）。这把运维知识编码到软件中，实现应用的自动化运维。例如 Etcd Operator 管理 etcd 集群，Prometheus Operator 管理 Prometheus。"
+    },
+    {
+        module: "集群架构",
+        question: "Kubernetes 中 kube-scheduler 的调度流程包括哪些阶段？",
+        type: "多选",
+        options: [
+            "Filtering（过滤阶段）",
+            "Scoring（打分阶段）",
+            "Binding（绑定阶段）",
+            "Verification（验证阶段）"
+        ],
+        answer: [0, 1],
+        explanation: "kube-scheduler 的调度流程主要包括两个阶段：Filtering 根据约束过滤掉不合适的节点（如资源不足、不满足亲和性），Scoring 对剩余节点打分选择最合适的。Binding 是由 API Server 完成的（将 Pod 的 nodeName 字段更新为目标节点）。"
+    },
+
+    // ========== 容器模块 (35题) ==========
+    {
+        module: "容器",
+        question: "Kubernetes 支持的容器运行时包括哪些？",
+        type: "多选",
+        options: [
+            "containerd",
+            "CRI-O",
+            "Docker（通过 dockershim）",
+            "runc"
+        ],
+        answer: [0, 1, 2],
+        explanation: "Kubernetes 支持多种容器运行时：containerd（推荐，独立 OCI 兼容运行时）、CRI-O（专为 Kubernetes 优化的容器运行时）、Docker（通过 dockershim，已废弃，最终移除）。runc 是底层 OCI 运行时（如 containerd 底层使用），不是 Kubernetes 直接管理的运行时。"
+    },
+    {
+        module: "容器",
+        question: "Pod 的生命周期钩子包括哪些？",
+        type: "多选",
+        options: [
+            "PostStart",
+            "PreStop",
+            "PostStop",
+            "PreStart"
+        ],
+        answer: [0, 1],
+        explanation: "Pod 支持两种生命周期钩子：PostStart（容器启动后立即执行）和 PreStop（容器终止前执行）。这些钩子用于执行初始化或清理工作。没有 PostStop 和 PreStart 钩子。钩子可以执行命令或调用 HTTP 端点。"
+    },
+    {
+        module: "容器",
+        question: "Kubernetes 中容器的镜像拉取策略有哪些？",
+        type: "多选",
+        options: [
+            "Always",
+            "IfNotPresent",
+            "Never",
+            "OnFailure"
+        ],
+        answer: [0, 1, 2],
+        explanation: "镜像拉取策略（imagePullPolicy）包括：Always（总是拉取镜像，适用于 latest 标签）、IfNotPresent（本地没有镜像时拉取，默认用于非 latest 标签）、Never（只使用本地镜像，从不拉取）。OnFailure 不是镜像拉取策略（它是 Job 重启策略之一）。"
+    },
+    {
+        module: "容器",
+        question: "Pod 中容器的环境变量可以从哪些来源获取？",
+        type: "多选",
+        options: [
+            "直接定义",
+            "ConfigMap",
+            "Secret",
+            "字段引用（Downward API）"
+        ],
+        answer: [0, 1, 2, 3],
+        explanation: "Pod 容器的环境变量可以从多种来源获取：直接在 Pod YAML 中定义、从 ConfigMap 引入、从 Secret 引入（安全敏感信息）、通过 Downward API 引用 Pod 自身的字段（如 Pod 名称、IP、标签等）。这提供了灵活的配置方式。"
+    },
+    {
+        module: "容器",
+        question: "Kubernetes 中什么是运行时类（RuntimeClass）？",
+        type: "单选",
+        options: [
+            "容器的类定义",
+            "为 Pod 选择不同的容器运行时配置",
+            "Pod 的资源类别",
+            "容器镜像的类别"
+        ],
+        answer: [1],
+        explanation: "RuntimeClass 定义了不同的容器运行时配置，允许 Pod 选择不同的运行时（如 gVisor、Kata Containers 等安全容器运行时）。通过设置 Pod 的 runtimeClassName 字段，Pod 将使用该运行时类定义的运行时配置。这在同一个集群内混合使用不同运行时场景很有用。"
+    },
+    {
+        module: "容器",
+        question: "Pod 中容器终止后的重启策略有哪些？",
+        type: "多选",
+        options: [
+            "Always",
+            "OnFailure",
+            "Never",
+            "UnlessStopped"
+        ],
+        answer: [0, 1, 2],
+        explanation: "容器的重启策略（restartPolicy）包括：Always（总是重启，默认）、OnFailure（失败时重启，退出码非零）、Never（从不重启）。UnlessStopped 不是 Kubernetes 的重启策略（这是 Docker 的策略之一）。重启策略应用于 Pod 级别，作用于所有容器。"
+    },
+    {
+        module: "容器",
+        question: "Kubernetes 中什么是容器资源请求（Request）和限制（Limit）？",
+        type: "多选",
+        options: [
+            "Request 是容器保证可用的最小资源量",
+            "Limit 是容器可以使用的最大资源量",
+            "Request 必须大于 Limit",
+            "如果没有设置 Limit，容器可以使用节点所有可用资源"
+        ],
+        answer: [0, 1, 3],
+        explanation: "Request 是容器保证可以使用的最小资源量，用于调度决策。Limit 是容器可以使用资源的上限，超过时可能被 OOM 杀掉。Request 不一定要大于 Limit（通常相反）。如果没有设置 Limit，容器可以使用节点上所有可用资源（可能导致资源竞争和影响其他 Pod）。"
+    },
+    {
+        module: "容器",
+        question: "Kubernetes 中的 Init 容器是什么？",
+        type: "单选",
+        options: [
+            "第一个启动的应用容器",
+            "在应用容器启动前运行的初始化容器",
+            "始终运行的监控容器",
+            "用于调试的容器"
+        ],
+        answer: [1],
+        explanation: "Init 容器在主应用容器启动前运行，用于执行初始化任务（如等待依赖、设置配置、下载数据等）。Init 容器按顺序执行，必须成功完成后才会启动应用容器。它有自己的镜像和资源配置，与普通容器一样但生命周期不同。"
+    },
+    {
+        module: "容器",
+        question: "Kubernetes 中什么是容器运行时接口（CRI）？",
+        type: "单选",
+        options: [
+            "定义容器镜像格式的接口",
+            "定义 kubelet 与容器运行时交互的接口",
+            "定义容器网络的接口",
+            "定义容器存储的接口"
+        ],
+        answer: [1],
+        explanation: "CRI 定义 kubelet 与容器运行时交互的接口，包括镜像服务和运行服务两个主要接口。这使 Kubernetes 无需修改核心代码就可支持新的容器运行时。镜像格式是 OCI 规范，网络接口是 CNI，存储接口是 CSI。"
+    },
+    {
+        module: "容器",
+        question: "Pod 中容器可以访问哪些信息（Downward API）？",
+        type: "多选",
+        options: [
+            "Pod 名称",
+            "Pod IP",
+            "Pod 标签",
+            "节点的 IP 地址"
+        ],
+        answer: [0, 1, 2],
+        explanation: "Downward API 允许 Pod 在不调用 API Server 的情况下访问自身的元数据：Pod 名称、IP、标签、注解、命名空间、资源限制等。节点的 IP 地址不能直接通过 Downward API 获取（但可以通过环境变量或 HostNetwork 模式访问）。"
+    },
+    {
+        module: "容器",
+        question: "Pod 中容器的安全上下文包括哪些设置？",
+        type: "多选",
+        options: [
+            "运行用户 ID",
+            "特权模式",
+            "只读根文件系统",
+            "Capabilities"
+        ],
+        answer: [0, 1, 2, 3],
+        explanation: "容器安全上下文（securityContext）包括：运行用户 ID（runAsUser）、特权模式（privileged）、只读根文件系统（readOnlyRootFilesystem）、Linux Capabilities（add/drop）。这些设置增强容器安全性，最小化权限原则。其他选项还有 SELinux 上下文、AppArmor 配置等。"
+    },
+    {
+        module: "容器",
+        question: "Kubernetes 中什么是容器镜像名称的摘要（Digest）？",
+        type: "单选",
+        options: [
+            "镜像标签，如 latest",
+            "基于镜像内容的唯一标识符，如 sha256:...",
+            "镜像仓库地址",
+            "镜像的版本号"
+        ],
+        answer: [1],
+        explanation: "镜像摘要（digest）是基于镜像内容计算的唯一标识符，格式为 `sha256:...`。相比标签（如 v1.0、latest）， digest 更可靠（不会被复用或修改）。在 Kubernetes 中可以使用 `image: nginx@sha256:...` 的形式指定镜像。推送镜像到仓库时会生成摘要。"
+    },
+    {
+        module: "容器",
+        question: "Pod 在节点上如何访问主机文件系统？",
+        type: "单选",
+        options: [
+            "默认可以访问",
+            "通过 hostPath 卷挂载",
+            "通过配置 volumeClaimTemplates",
+            "通过 downward API"
+        ],
+        answer: [1],
+        explanation: "Pod 访问主机文件系统通过 hostPath 卷挂载。注意这有安全风险（特别是有特权容器时），要谨慎使用。默认情况下 Pod 无法访问主机文件系统。volumeClaimTemplates 用于 StatefulSet 的持久化存储，downward API 用于访问 Pod 元数据。"
+    },
+    {
+        module: "容器",
+        question: "Kubernetes 中容器的就绪态探针（Readiness Probe）用于什么？",
+        type: "单选",
+        options: [
+            "判断容器是否存活",
+            "判断容器是否准备好接收流量",
+            "定期检查容器健康状态",
+            "定时重启容器"
+        ],
+        answer: [1],
+        explanation: "就绪态探针（readinessProbe）判断容器是否准备好接收流量（应用已初始化并正常工作）。如果探测失败，Service 会将该 Pod 从端点列表中移除。存活态探针（livenessProbe）判断容器是否存活，失败时重启容器。定期检查是探测机制，启动探针（startupProbe）用于启动慢的容器。"
+    },
+    {
+        module: "容器",
+        question: "Kubernetes 中容器的启动探针（Startup Probe）的作用是什么？",
+        type: "单选",
+        options: [
+            "判断容器是否启动完成",
+            "判断容器是否存活",
+            "判断容器是否准备好接收流量",
+            "定期重启容器"
+        ],
+        answer: [0],
+        explanation: "启动探针（startupProbe）判断容器是否启动完成。对于启动时间很长的容器，可以使用启动探针防止被存活探针误杀。如果启动期间启动探测失败，容器会被重启。存活态探针（livenessProbe）判断是否存活，就绪态探针（readinessProbe）判断是否准备好。"
+    },
+    {
+        module: "容器",
+        question: "Kubernetes 中当 Pod 内存超过 Limit 时会发生什么？",
+        type: "单选",
+        options: [
+            "Pod 被重新调度",
+            "容器可能被 OOM Killer 杀掉",
+            "Pod 会被删除",
+            "容器被暂停"
+        ],
+        answer: [1],
+        explanation: "当容器内存使用超过 Limit 时，容器可能被 Linux OOM Killer 杀掉（根据 OOM 分值）。这会导致容器重启（如果重启策略是 Always 或 OnFailure）。Pod 不会被重新调度（除非节点资源不足或失效）。删除 Pod 需要手动或控制器操作。容器不会暂停，是直接被杀掉。"
+    },
+    {
+        module: "容器",
+        question: "Kubernetes 中当 Pod CPU 超过 Limit 时会发生什么？",
+        type: "单选",
+        options: [
+            "Pod 被重新调度",
+            "容器被限制到 Limit，但不会被杀掉",
+            "Pod 会被删除",
+            "容器被强制停止"
+        ],
+        answer: [1],
+        explanation: "当容器 CPU 使用超过 Limit 时，容器会被节流（throttled）到 Limit 值，不会被杀掉（CPU 是可压缩资源）。这与内存不同（不可压缩，会被 OOM 杀掉）。节流可能导致应用性能下降，但不会中断服务。"
+    },
+    {
+        module: "容器",
+        question: "Kubernetes 中Pod 可以与节点共享哪些网络命名空间？",
+        type: "多选",
+        options: [
+            "网络命名空间（Network Namespace）- hostNetwork",
+            "PID 命名空间 - hostPID",
+            "IPC 命名空间 - hostIPC",
+            "UTS 命名空间 - hostIPC"
+        ],
+        answer: [0, 1, 2],
+        explanation: "Pod 可以配置 hostNetwork: true 共享节点的网络命名空间（ Pod 与节点共享网络栈），hostPID 共享 PID 命名空间（可以看到节点上的进程），hostIPC 共享 IPC 命名空间（共享 IPC 资源）。注意这些选项有安全风险（特别是 hostPID）。UTS 命名空间共享通过 hostNetwork 或 Pod 内自动共享。"
+    },
+    {
+        module: "容器",
+        question: "Kubernetes 中什么是 Pause 容器？",
+        type: "单选",
+        options: [
+            "用于暂停 Pod 的容器",
+            "Pod 基础设施容器，负责共享网络和存储命名空间",
+            "用于调试的容器",
+            "在 Pod 启动前运行的容器"
+        ],
+        answer: [1],
+        explanation: "Pause 容器（或称为 sandbox 容器）是 Pod 的基础设施容器，负责持有网络和存储命名空间，Pod 中的其他容器共享这些命名空间。Pause 容器始终处于暂停状态（Pause 命令），不执行任何应用逻辑。当所有应用容器停止时，Pause 容器才会停止（ Pod 也就终止）。"
+    },
+    {
+        module: "容器",
+        question: "Kubernetes 中如何优雅地终止容器？",
+        type: "多选",
+        options: [
+            "发送 SIGTERM 信号",
+            "等待 terminationGracePeriodSeconds",
+            "如果超时发送 SIGKILL",
+            "直接强制删除 Pod"
+        ],
+        answer: [0, 1, 2],
+        explanation: "Kubernetes 优雅终止流程：发送 SIGTERM 信号给容器主进程（PID 1）、等待 terminationGracePeriodSeconds（默认 30 秒）、如果容器未停止则发送 SIGKILL。期间可以调用 PreStop 钩子执行清理。直接强制删除（kubectl delete --force=true）跳过优雅终止。"
+    },
+    {
+        module: "容器",
+        question: "Kubernetes 中容器镜像的私有仓库认证如何配置？",
+        type: "多选",
+        options: [
+            "在 Pod 的 imagePullSecrets 字段中指定 Secret",
+            "在 ServiceAccount 的 imagePullSecrets 中指定（Pod 自动继承）",
+            "在每个节点上配置 docker config.json",
+            "使用 Docker Hub 公共镜像"
+        ],
+        answer: [0, 1],
+        explanation: "私有仓库认证可以通过两种方式配置：Pod 的 imagePullSecrets 字段（针对该 Pod）、ServiceAccount 的 imagePullSecrets（使用该 SA 的 Pod 自动继承）。Secret 类型为 kubernetes.io/dockerconfigjson。在每个节点上配置 docker config.json 是手动方式，不推荐也不直接支持（除非使用特定 CRI）。公开镜像无需认证。"
+    },
+    {
+        module: "容器",
+        question: "Kubernetes 中容器镜像的仓库密钥（Secret）类型是什么？",
+        type: "单选",
+        options: [
+            "Opaque",
+            "kubernetes.io/dockercfg",
+            "kubernetes.io/dockerconfigjson",
+            "kubernetes.io/tls"
+        ],
+        answer: [2],
+        explanation: "私有 Docker 仓库认证使用的 Secret 类型是 `kubernetes.io/dockerconfigjson`。它包含 ~/.docker/config.json 的 Base64 编码内容（包含认证信息）。kubernetes.io/dockercfg 是旧版本类型（支持旧版 docker 配置格式），Opaque 是通用 Secret 类型，kubernetes.io/tls 用于 TLS 证书。"
+    },
+    {
+        module: "容器",
+        question: "Kubernetes 中如何限制容器可以使用节点的哪些设备？",
+        type: "多选",
+        options: [
+            "使用 Device Plugins",
+            "使用安全上下文的 capabilities",
+            "使用 hostPath 挂载设备",
+            "使用 Privileged 模式"
+        ],
+        answer: [0, 2],
+        explanation: "容器可以使用节点的设备通过 Device Plugins（如 NVIDIA GPU 设备插件）或 hostPath 挂载设备节点（如 /dev/sda）。capabilities 用于权限控制（不是访问设备），Privileged 模式获得所有设备访问权限但不推荐（风险高）。"
+    },
+    {
+        module: "容器",
+        question: "Kubernetes 中 Docker 与 Kubernetes 的关系是什么？",
+        type: "单选",
+        options: [
+            "Docker 是 Kubernetes 的唯一运行时",
+            "Kubernetes 曾经使用 Docker 作为容器运行时，现在通过 CRI 支持多种运行时",
+            "Kubernetes 和 Docker 竞争关系",
+            "Kubernetes 是 Docker 的组件"
+        ],
+        answer: [1],
+        explanation: "Kubernetes 通过 CRI 接口支持多种容器运行时，包括 Docker（通过 dockershim）、containerd、CRI-O 等。Docker 曾经是主要运行时，现在 dockershim 已废弃（Kubernetes 1.24 移除）。它们不是竞争关系：Kubernetes 是容器编排系统，Docker 是容器运行时/平台。"
+    },
+    {
+        module: "容器",
+        question: "Pod 中容器通过 DNS 访问其他 Service 时，使用什么域名？",
+        type: "单选",
+        options: [
+            "<service-name>",
+            "<service-name>.<namespace>.svc.cluster.local",
+            "<service-name>.svc",
+            "任意域名"
+        ],
+        answer: [1],
+        explanation: "Pod 访问同一命名空间的 Service 使用域名 `<service-name>.<namespace>.svc.cluster.local`，但由于搜索配置，可以简写为 `<service-name>`（同一命名空间）、`<service-name>.<namespace>`（跨命名空间）。完整格式最可靠。格式说明：service-name 是服务名称，namespace 是命名空间，svc 是固定子域，cluster.local 是集群域。"
+    },
+    {
+        module: "容器",
+        question: "Kubernetes 中如何查看 Pod 中容器的日志？",
+        type: "多选",
+        options: [
+            "kubectl logs <pod-name>",
+            "kubectl logs <pod-name> -c <container-name>",
+            "进入容器后查看日志文件",
+            "直接查看节点日志目录"
+        ],
+        answer: [0, 1, 2],
+        explanation: "查看容器日志的方式：`kubectl logs <pod-name>`（查看默认容器日志）、`kubectl logs <pod-name> -c <container-name>`（多容器 Pod 指定容器）、进入容器后查看日志文件（`kubectl exec`）。直接查看节点日志目录可以但不是标准方式（路径与运行时相关）。"
+    },
+    {
+        module: "容器",
+        question: "Kubernetes 中如何实现 Pod 中容器间的通信？",
+        type: "单选",
+        options: [
+            "通过 Service",
+            "通过 localhost:端口（本地回环）",
+            "通过主机 IP",
+            "通过节点端口"
+        ],
+        answer: [1],
+        explanation: "Pod 中容器间通信通过 localhost + 端口，因为它们共享网络命名空间。例如容器 A 监听 8000 端口，容器 B 可以通过 `http://localhost:8000` 访问。Service 用于跨 Pod 通信，主机 IP 用于 HostNetwork 模式或访问节点网络，节点端口是 NodePort Service 的类型。"
+    },
+    {
+        module: "容器",
+        question: "Kubernetes 中 Pod 的 DNS 策略有哪些？",
+        type: "多选",
+        options: [
+            "Default（继承节点的 DNS）",
+            "ClusterFirst（默认，使用集群 DNS）",
+            "ClusterFirstWithHostNet（使用集群 DNS 但主机网络）",
+            "None（不配置 DNS，使用自定义配置）"
+        ],
+        answer: [0, 1, 2, 3],
+        explanation: "DNS 策略包括：Default（继承节点 DNS）、ClusterFirst（使用集群 DNS，Pod 域名解析优先用集群 DNS）、ClusterFirstWithHostNet（与 ClusterFirst 类似，适用于 hostNetwork Pod）、None（不配置 DNS，支持自定义 DNS）。Default 策略通常不用于 Kubernetes，因为无法解析 Service 域名。"
+    },
+    {
+        module: "容器",
+        question: "Kubernetes 中容器可以设置哪些级别的安全策略？",
+        type: "多选",
+        options: [
+            "容器级别的 securityContext",
+            "Pod 级别的 securityContext",
+            "Pod Security Policy（已废弃）",
+            "Pod Security Standards（Pod 安全标准）"
+        ],
+        answer: [0, 1, 3],
+        explanation: "容器安全策略可以从多个级别设置：容器级别的 securityContext（针对单个容器）、Pod 级别的 securityContext（应用于所有容器）、Pod Security Standards（PSC，定义安全基准：privileged、baseline、restricted）。Pod Security Policy 已在 Kubernetes 1.25 废弃，使用 PSC 替代。"
+    },
+    {
+        module: "容器",
+        question: "Kubernetes 中容器镜像的分层结构有什么优势？",
+        type: "多选",
+        options: [
+            "节省存储空间",
+            "加快镜像拉取速度（共享层）",
+            "便于维护和更新",
+            "提高容器性能"
+        ],
+        answer: [0, 1, 2],
+        explanation: "容器镜像分层结构优势：节省存储空间（共享相同层）、加快拉取速度（跳过已存在的层）、便于维护和更新（只更新变动的层）。分层不提高容器运行性能（镜像与运行时无关）。每一层是只读的，容器启动时添加可写层。"
+    },
+    {
+        module: "容器",
+        question: "Kubernetes 中如何调试启动失败的容器？",
+        type: "多选",
+        options: [
+            "kubectl describe pod",
+            "kubectl logs",
+            "kubectl exec 进入其他容器",
+            "查看节点日志"
+        ],
+        answer: [0, 1, 2],
+        explanation: "调试启动失败容器的方法：`kubectl describe pod` 查看事件（容器启动失败原因）、`kubectl logs --previous` 查看上一个容器日志（如果容器已重启）、`kubectl exec` 进入同一 Pod 的其他容器调试（如果其他容器正常运行）、进入节点查看。"
+    },
+    {
+        module: "容器",
+        question: "Kubernetes 中容器的健康检查有哪些类型？",
+        type: "多选",
+        options: [
+            "Liveness Probe（存活探针）",
+            "Readiness Probe（就绪探针）",
+            "Startup Probe（启动探针）",
+            "Health Probe（健康探针）"
+        ],
+        answer: [0, 1, 2],
+        explanation: "Kubernetes 有三种健康检查探针：存活探针（判断容器是否存活，失败时重启）、就绪探针（判断容器是否准备好，失败时移除 Service 端点）、启动探针（判断容器是否启动，防止存活探针误杀启动慢的容器）。没有 Health Probe 这一类（可能命名混淆）。"
+    },
+    {
+        module: "容器",
+        question: "Kubernetes 中如何设置容器的端口？",
+        type: "单选",
+        options: [
+            "在 spec.containers.ports 字段中设置",
+            "在 Pod spec.ports 字段中设置",
+            "通过环境变量设置",
+            "自动分配"
+        ],
+        answer: [0],
+        explanation: "容器端口在 spec.containers.ports 中设置，包括 containerPort（容器端口）、protocol（协议）、name（名称）等。Pod 没有 spec.ports（那是 Service 的）。环境变量用于应用配置，不能设置端口。端口不会自动分配（除非使用 hostPort 和可用端口）。"
+    },
+    {
+        module: "容器",
+        question: "Kubernetes 中什么是容器的退出码？",
+        type: "单选",
+        options: [
+            "容器的 ID",
+            "容器退出时返回给系统的状态码",
+            "容器的进程 ID",
+            "容器的名称"
+        ],
+        answer: [1],
+        explanation: "容器退出码是容器主进程退出时返回的状态码。0 表示成功，非零表示失败。Kubernetes 根据退出码和重启策略决定是否重启容器。可以通过 `kubectl describe pod` 查看容器的退出码和最后退出时间。退出码是调试容器失败原因的重要信息。"
+    },
+    {
+        module: "容器",
+        question: "Kubernetes 中如何从 Pod 内部访问 API Server？",
+        type: "多选",
+        options: [
+            "使用 ServiceAccount Token（挂载在 /var/run/secrets/kubernetes.io/serviceaccount）",
+            "使用 https://kubernetes.default.svc",
+            "使用 localhost:6443",
+            "使用集群外部地址"
+        ],
+        answer: [0, 1],
+        explanation: "Pod 访问 API Server 使用 ServiceAccount Token（自动挂载）和服务 kubernetes（地址 https://kubernetes.default.svc 或 kubernetes.default），通过 ServiceAccount 的 ClusterRole 有相应的权限。不能使用 localhost:6443（除非配置 hostNetwork），可以但通常不用外部地址。"
+    }
+];
+
+// 提取唯一模块列表
+const modules = [...new Set(questions.map(q => q.module))];

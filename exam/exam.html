@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes 概念测评系统</title>
+    <link rel="stylesheet" href="exam.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 首页 -->
+        <div id="home-page">
+            <div class="card">
+                <a href="../index.html" class="back-button">
+                    <span>←</span> 返回学习主页
+                </a>
+                <h1 class="home-title">🚀 Kubernetes 概念测评系统</h1>
+                <p class="home-subtitle">检验你对 Kubernetes 核心概念的掌握程度</p>
+
+                <div class="module-section">
+                    <h3 class="section-title">选择测试模块</h3>
+                    <div class="module-grid" id="module-grid"></div>
+                    <div style="margin-top: 15px;">
+                        <label class="module-item select-all-label" style="display: inline-flex; border: 2px solid #e0e0e0; color: #666;">
+                            <input type="checkbox" id="select-all">
+                            <span>全部模块</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="question-count-section">
+                    <h3 class="section-title">选择题目数量</h3>
+                    <select id="question-count" class="question-count-select">
+                        <option value="5">5 题</option>
+                        <option value="10" selected>10 题</option>
+                        <option value="15">15 题</option>
+                        <option value="20">20 题</option>
+                        <option value="25">25 题</option>
+                        <option value="30">30 题</option>
+                        <option value="35">35 题</option>
+                        <option value="40">40 题</option>
+                        <option value="45">45 题</option>
+                        <option value="50">50 题</option>
+                    </select>
+                </div>
+
+                <div style="text-align: center;">
+                    <button id="start-btn" class="btn btn-primary" disabled>开始测评</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 答题页面 -->
+        <div id="exam-page" class="hidden">
+            <div class="card">
+                <div class="exam-layout">
+                    <div class="question-area">
+                        <div id="question-container"></div>
+                        <div class="control-buttons">
+                            <button id="prev-btn" class="btn btn-secondary" disabled>上一题</button>
+                            <button id="next-btn" class="btn btn-secondary">下一题</button>
+                            <button id="submit-btn" class="btn btn-success" disabled>交卷</button>
+                        </div>
+                    </div>
+                    <div class="question-nav">
+                        <h3 class="nav-title">答题进度</h3>
+                        <div class="progress-info">
+                            <div class="progress-text" id="progress-text">已完成 0 / 20</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <h3 class="nav-title" style="margin-top: 20px;">题目导航</h3>
+                        <div class="question-grid" id="question-grid-nav"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 结果页面 -->
+        <div id="result-page" class="hidden">
+            <div class="card">
+                <button id="return-home-btn" class="btn btn-secondary return-home-btn">
+                    <span>← 返回测评主页</span>
+                </button>
+                <div class="result-header">
+                    <div class="result-score" id="result-score">0 / 20</div>
+                    <div class="result-text" id="result-percentage">正确率: 0%</div>
+                </div>
+
+                <h3 class="section-title">答题详情</h3>
+                <div class="result-grid" id="result-grid"></div>
+
+                <div id="result-detail" class="result-question-detail"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="questions.js"></script>
+    <script src="exam.js"></script>
+</body>
+</html>

@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>集群管理 - Kubernetes 核心概念</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🔧 集群管理</h1>
+            <p class="subtitle">掌握集群运维和监控</p>
+        </div>
+    </header>
+
+    <nav class="main-nav">
+        <div class="container">
+            <ul>
+                <li><a href="index.html">首页</a></li>
+                <li><a href="overview.html">概述</a></li>
+                <li><a href="architecture.html">集群架构</a></li>
+                <li><a href="containers.html">容器</a></li>
+                <li><a href="workloads.html">工作负载</a></li>
+                <li><a href="networking.html">网络</a></li>
+                <li><a href="storage.html">存储</a></li>
+                <li><a href="configuration.html">配置</a></li>
+                <li><a href="scheduling.html">调度</a></li>
+                <li><a href="cluster-admin.html" class="active">集群管理</a></li>
+                <li><a href="exam/exam.html" style="color: #28a745;">📝 知识测评</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main>
+        <div class="container">
+
+            <!-- 集群管理概述 -->
+            <section class="concept-section">
+                <h2>集群管理概述</h2>
+                <p>Kubernetes 集群管理涉及节点管理、升级、监控、日志收集、故障排查等多个方面，是保证集群稳定运行的关键。</p>
+
+                <h3>集群管理的核心职责</h3>
+                <ul>
+                    <li><strong>节点管理</strong>：添加、维护、移除节点</li>
+                    <li><strong>版本升级</strong>：集群版本升级和维护</li>
+                    <li><strong>监控告警</strong>：监控集群和应用状态</li>
+                    <li><strong>日志管理</strong>：收集和分析日志</li>
+                    <li><strong>故障排查</strong>：诊断和解决集群问题</li>
+                    <li><strong>备份恢复</strong>：etcd 备份和集群恢复</li>
+                </ul>
+            </section>
+
+            <!-- 节点管理 -->
+            <section class="concept-section">
+                <h2>节点管理</h2>
+                <p>Kubernetes 集群由多个节点组成，可以是物理机、虚拟机或云主机。节点管理包括节点的添加、维护、监控和故障处理。</p>
+
+                <h3>节点状态</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>状态</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Ready</strong></td>
+                            <td>节点健康，可以调度 Pod</td>
+                        </tr>
+                        <tr>
+                            <td><strong>NotReady</strong></td>
+                            <td>节点不健康，不能调度 Pod</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Unknown</strong></td>
+                            <td>控制平面无法与节点通信</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Maintenance</strong></td>
+                            <td>节点处于维护模式（已排空）</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>节点维护（排空和取消排空）</h3>
+                <pre><code># 排空节点（驱逐所有 Pod）
+kubectl drain node1 --ignore-daemonsets --delete-emptydir-data
+
+# 查看节点排空状态
+kubectl get nodes
+
+# 取消排空（恢复节点调度）
+kubectl uncordon node1</code></pre>
+
+                <h3>节点污点</h3>
+                <pre><code># 添加污点（禁止调度 Pod）
+kubectl taint nodes node1 key=value:NoSchedule
+
+# 移除污点
+kubectl taint nodes node1 key:NoSchedule-</code></pre>
+
+                <h3>节点关闭</h3>
+                <p>Kubernetes 支持优雅关闭节点，避免 Pod 突然终止。</p>
+                <pre><code># API Server 配置
+--pod-eviction-timeout=5m0s  # Pod 驱逐超时时间</code></pre>
+            </section>
+
+            <!-- 集群升级 -->
+            <section class="concept-section">
+                <h2>集群升级</h2>
+                <p>Kubernetes 支持集群版本升级，可以一次升级一个小版本（如 v1.24 → v1.25）。</p>
+
+                <h3>升级前准备</h3>
+                <ul>
+                    <li>备份 etcd 数据</li>
+                    <li>检查兼容性问题</li>
+                    <li>查看变更日志</li>
+                    <li>准备回滚方案</li>
+                </ul>
+
+                <h3>升级步骤</h3>
+                <div class="flow-diagram">
+                    <div class="flow-step">1. 升级第一个控制平面节点</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">2. 升级其他控制平面节点</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">3. 升级工作节点</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">4. 验证集群功能</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">5. 更新 kubectl 和其他工具</div>
+                </div>
+
+                <div class="warning">
+                    <strong>升级注意事项：</strong>
+                    <ul>
+                        <li>不要跨版本升级（如 v1.23 → v1.25）</li>
+                        <li>升级期间 Pod 可能被重新调度</li>
+                        <li>API 弃用会导致对象无法创建</li>
+                        <li>充分测试后再升级生产集群</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- 监控 -->
+            <section class="concept-section">
+                <h2>监控</h2>
+                <p>Kubernetes 集群监控包括集群组件监控、节点监控和应用监控，用于及时发现和解决问题。</p>
+
+                <h3>监控层次</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>层次</th>
+                            <th>监控内容</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>基础设施层</strong></td>
+                            <td>节点资源（CPU、内存、磁盘、网络）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>集群层</strong></td>
+                            <td>控制平面组件（API Server、Scheduler、Controller Manager</td>
+                        </tr>
+                        <tr>
+                            <td><strong>应用层</strong></td>
+                            <td>Pod 和应用的性能指标</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>常用监控指标</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>指标类型</th>
+                            <th>示例</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>资源使用率</strong></td>
+                            <td>CPU%、内存%、磁盘使用率</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Pod 状态</strong></td>
+                            <td>运行中、失败、重启次数</td>
+                        </tr>
+                        <tr>
+                            <td><strong>节点状态</strong></td>
+                            <td>就绪、不可用、资源压力</td>
+                        </tr>
+                        <tr>
+                            <td><strong>集群组件</strong></td>
+                            <td>API Server QPS、Scheduler 调度延迟</td>
+                        </tr>
+                        <tr>
+                            <td><strong>网络性能</strong></td>
+                            <td>网络延迟、流量、错误率</td>
+                        </tr>
+                        <tr>
+                            <td><strong>存储性能</strong></td>
+                            <td>IOPS、吞吐量、延迟</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>监控工具</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>工具</th>
+                            <th>特点</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Prometheus</strong></td>
+                            <td>时序数据库，收集和存储指标</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Grafana</strong></td>
+                            <td>可视化仪表板和告警</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Metrics Server</strong></td>
+                            <td>内置资源监控，用于 HPA</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Kube-state-metrics</strong></td>
+                            <td>提供 Kubernetes 对象指标</td>
+                        </tr>
+                        <tr>
+                            <td><strong>cAdvisor</strong></td>
+                            <td>容器资源监控</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Node Exporter</strong></td>
+                            <td>节点硬件监控</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- 日志 -->
+            <section class="concept-section">
+                <h2>日志</h2>
+                <p>Kubernetes 日志分为系统日志和应用日志，使用日志收集系统统一管理日志。</p>
+
+                <h3>日志类型</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>类型</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>容器日志</strong></td>
+                            <td>容器标准输出和错误输出</td>
+                        </tr>
+                        <tr>
+                            <td><strong>系统日志</strong></td>
+                            <td>Kubernetes 组件日志（/var/log）
+                        </tr>
+                        <tr>
+                            <td><strong>审计日志</strong></td>
+                            <td>记录 API 请求和响应</td>
+                        </tr>
+                        <tr>
+                            <td><strong>事件日志</strong></td>
+                            <td>Kubernetes 事件资源</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>日志收集架构</h3>
+                <div class="relation-diagram">
+                    <div class="diagram-container" style="flex-direction: column; align-items: center;">
+                        <div class="diagram-box object">Pod/容器</div>
+                        <div class="diagram-arrow">⬇︎ 生成日志 ⬇︎</div>
+                        <div class="diagram-box object">节点上的日志文件</div>
+                        <div class="diagram-arrow">⬇︎ 采集 ⬇︎</div>
+                        <div class="diagram-box object">日志收集器（Fluentd/Fluent Bit</div>
+                        <div class="diagram-arrow">⬇︀ 发送 ⬇︀</div>
+                        <div class="diagram-box object">日志存储（ES/Loki）</div>
+                        <div class="diagram-arrow">⬇︀ 查询 ⬇︀</div>
+                        <div class="diagram-box object">可视化界面（Kibana/Grafana</div>
+                    </div>
+                </div>
+
+                <h3>常用日志工具</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>工具</th>
+                            <th>特点</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Fluentd</strong></td>
+                            <td>成熟稳定，插件丰富</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Fluent Bit</strong></td>
+                            <td>轻量级，资源占用少</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Logstash</strong></td>
+                            <td>功能强大，过滤丰富</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Filebeat</strong></td>
+                            <td>轻量级，ELK Stack 专用</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Loki</strong></td>
+                            <td>轻量级日志存储，与 Grafana 集成</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>查看日志</h3>
+                <pre><code># 查看 Pod 日志
+kubectl logs &lt;pod-name&gt;
+
+# 实时跟踪日志
+kubectl logs -f &lt;pod-name&gt;
+
+# 查看指定容器的日志
+kubectl logs &lt;pod-name&gt; -c &lt;container-name&gt;
+
+# 查看上一个容器的日志（容器重启后）
+kubectl logs &lt;pod-name&gt; --previous
+
+# 查看所有 Pod 的日志（kubectl 插件）
+kubectl logs -l app=myapp --all-containers=true</code></pre>
+            </section>
+
+            <!-- 故障排查 -->
+            <section class="concept-section">
+                <h2>故障排查</h2>
+                <p>Kubernetes 集群故障排查需要系统化的方法，从基础设施到应用逐步排查。</p>
+
+                <h3>故障排查流程</h3>
+                <div class="flow-diagram">
+                    <div class="flow-step">1. 确定问题范围（节点/应用）</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">2. 检查节点状态</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">3. 检查 Pod 状态</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">4. 查看事件和日志</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">5. 检查配置和资源</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">6. 分析根本原因</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">7. 修复问题并验证</div>
+                </div>
+
+                <h3>常见问题</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>问题</th>
+                            <th>可能原因</th>
+                            <th>排查方法</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>ImagePullBackOff</strong></td>
+                            <td>镜像拉取失败</td>
+                            <td>检查镜像名称、凭证、仓库可用性</td>
+                        </tr>
+                        <tr>
+                            <td><strong>CrashLoopBackOff</strong></td>
+                            <td>容器反复重启</td>
+                            <td>检查日志、健康检查、资源配置</td>
+                        </tr>
+                        <tr>
+                            <td><strong>OOMKilled</strong></td>
+                            <td>内存超限</td>
+                            <td>增加内存限制或优化应用</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Pod Pending</strong></td>
+                            <td>调度失败</td>
+                            <td>检查资源、调度约束、污点容忍度</td>
+                        </tr>
+                        <tr>
+                            <td><strong>节点 NotReady</strong></td>
+                            <td>节点不健康</td>
+                            <td>检查 kubelet、网络、资源</td>
+                        </tr>
+                        <tr>
+                            <td><strong>DNS 解析失败</strong></td>
+                            <td>Service/DNS 问题</td>
+                            <td>检查 CoreDNS、Service、网络策略</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>常用调试命令</h3>
+                <table class="cmd-table">
+                    <thead>
+                        <tr>
+                            <th>命令</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>kubectl get events</code></td>
+                            <td>查看集群事件</td>
+                        </tr>
+                        <tr>
+                            <td><code>kubectl describe pod &lt;name&gt;</code></td>
+                            <td>查看 Pod 详细信息</td>
+                        </tr>
+                        <tr>
+                            <td><code>kubectl logs &lt;pod&gt;</code></td>
+                            <td>查看 Pod 日志</td>
+                        </tr>
+                        <tr>
+                            <td><code>kubectl top nodes</code></td>
+                            <td>查看节点资源使用</td>
+                        </tr>
+                        <tr>
+                            <td><code>kubectl top pods</code></td>
+                            <td>查看 Pod 资源使用</td>
+                        </tr>
+                        <tr>
+                            <td><code>kubectl get svc -o wide</code></td>
+                            <td>查看 Service 及其 Endpoints</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- 备份和恢复 -->
+            <section class="concept-section">
+                <h2>备份和恢复</h2>
+                <p>etcd 是 Kubernetes 的状态数据库，备份 etcd 对于集群安全至关重要。</p>
+
+                <h3>备份 etcd</h3>
+                <pre><code># etcdctl 备份
+ETCDCTL_API=3 etcdctl \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key \
+  snapshot save /path/to/backup.db</code></pre>
+
+                <h3>恢复 etcd</h3>
+                <pre><code># 停止静态 Pod 控制平面组件
+mv /etc/kubernetes/manifests /etc/kubernetes/manifests.bak
+
+# 恢复 etcd
+ETCDCTL_API=3 etcdctl \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key \
+  --data-dir=/var/lib/etcd \
+  snapshot restore /path/to/backup.db
+
+# 恢复静态 Pod 控制平面组件
+mv /etc/kubernetes/manifests.bak /etc/kubernetes/manifests</code></pre>
+
+                <h3>Velero 备份工具</h3>
+                <p>Velero 是一个 Kubernetes 备份和恢复工具，可以备份整个集群或特定资源。</p>
+
+                <pre><code># 安装 Velero
+velero install --provider aws --plugins velero/velero-plugin-for-aws:v1.2.0
+
+# 备份集群
+velero backup create my-backup --include-namespaces default
+
+# 恢复集群
+velero restore create --from-backup my-backup</code></pre>
+            </section>
+
+            <!-- 集群管理章节总结 -->
+            <section class="concept-section">
+                <h2>本章总结</h2>
+                <div class="success">
+                    <strong>关键要点：</strong>
+                    <ul>
+                        <li>节点管理包括节点的添加、维护、排空和监控</li>
+                        <li>集群升级需要遵循小版本升级原则，做好备份和回滚准备</li>
+                        <li>监控包括基础设施、集群和应用三个层次</li>
+                        <li>日志收集系统统一管理和存储所有日志</li>
+                        <li>故障排查需要系统化的流程和方法</li>
+                        <li>etcd 备份对于集群安全和灾难恢复至关重要</li>
+                        <li>Prometheus 和 Grafana 是主流的监控解决方案</li>
+                        <li>Fluentd 和 Loki 是常用的日志收集方案</li>
+                    </ul>
+                </div>
+
+                <h3>学习完成！</h3>
+                <div style="text-align: center; margin-top: 2rem; padding: 2rem; background: #d4edda; border-radius: 12px;">
+                    <h3>🎉 恭喜你完成 Kubernetes 核心概念学习！</h3>
+                    <p>你已经掌握了 Kubernetes 的核心概念和架构，可以开始实践和深入研究！</p>
+                    <ul style="text-align: left; max-width: 600px; margin: 1.5rem auto;">
+                        <li>建议在本地搭建 Kubernetes 集群（Minikube、Kind）进行实践</li>
+                        <li>尝试部署真实的应用到 Kubernetes</li>
+                        <li>深入学习 Helm、Kustomize 等部署工具</li>
+                        <li>探索服务网格（如 Istio）等高级特性</li>
+                        <li>参与 Kubernetes 社区，跟上最新发展</li>
+                    </ul>
+                    <p style="margin-top: 2rem;"><a href="index.html" class="btn">返回首页 →</a></p>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Kubernetes 核心概念学习指南 | 基于 <a href="https://kubernetes.io/docs/concepts/" target="_blank">Kubernetes 官方文档</a>整理</p>
+        </div>
+    </footer>
+</body>
+</html>

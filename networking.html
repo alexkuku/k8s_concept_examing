@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网络 - Kubernetes 核心概念</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🌐 网络</h1>
+            <p class="subtitle">理解服务发现、负载均衡和网络策略</p>
+        </div>
+    </header>
+
+    <nav class="main-nav">
+        <div class="container">
+            <ul>
+                <li><a href="index.html">首页</a></li>
+                <li><a href="overview.html">概述</a></li>
+                <li><a href="architecture.html">集群架构</a></li>
+                <li><a href="containers.html">容器</a></li>
+                <li><a href="workloads.html">工作负载</a></li>
+                <li><a href="networking.html" class="active">网络</a></li>
+                <li><a href="storage.html">存储</a></li>
+                <li><a href="configuration.html">配置</a></li>
+                <li><a href="scheduling.html">调度</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main>
+        <div class="container">
+
+            <!-- 网络概述 -->
+            <section class="concept-section">
+                <h2>网络概述</h2>
+                <p>Kubernetes 集群的网络模型非常独特，它强调每个 Pod 都有自己的 IP 地址，不需要创建额外的网络地址转换（NAT）。</p>
+
+                <h3>Kubernetes 网络模型原则</h3>
+                <ul>
+                    <li><strong>所有 Pod 不运行在 NAT 后面</strong>：Pod 可以直接与任何其他 Pod 通信</li>
+                    <li><strong>所有 Node 可以与所有 Pod 通信</strong>：不需要额外的网络转换</li>
+                    <li><strong>Pod 看到自己看到的 IP</strong>：Pod 看到的 IP 就是它们自己的 IP</li>
+                    <li><strong>扁平网络</strong>：所有 Pod 属于同一个扁平的网络空间</li>
+                </ul>
+
+                <div class="relation-diagram">
+                    <div class="diagram-container" style="flex-direction: column; align-items: center;">
+                        <div class="diagram-box control-plane">控制平面</div>
+                        <div class="diagram-arrow">⬆︎ 管理网络 ⬆︎</div>
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; width: 100%;">
+                            <div class="diagram-box worker-node">节点 1 (CNI 插件)</div>
+                            <div class="diagram-box worker-node">节点 2 (CNI 插件)</div>
+                            <div class="diagram-box worker-node">节点 3 (CNI 插件)</div>
+                        </div>
+                        <div class="diagram-arrow">⬇︎ 跨节点通信 ⬇︎</div>
+                        <div style="display: flex; gap: 1rem; justify-content: center;">
+                            <div class="diagram-box object">Pod A (10.244.1.2)</div>
+                            <div class="diagram-box object">Pod B (10.244.2.3)</div>
+                            <div class="diagram-box object">Pod C (10.244.3.4)</div>
+                        </div>
+                        <div style="text-align: center; margin-top: 10px;">扁平 IP 网络：所有 Pod 可直接通信</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Service -->
+            <section class="concept-section">
+                <h2>Service <span class="badge badge-primary">核心概念</span></h2>
+                <p>Service 是 Kubernetes 中一种抽象，它定义了一组 Pod 的逻辑集合和访问这些 Pod 的策略。</p>
+
+                <h3>Service 的作用</h3>
+                <ul>
+                    <li><strong>服务发现</strong>：为一组 Pod 提供稳定的访问端点</li>
+                    <li><strong>负载均衡</strong>：将流量分发到后端 Pod</li>
+                    <li><strong>稳定的网络标识</strong>：Pod 可能变化，但 Service 地址不变</li>
+                    <li><strong>跨节点访问</strong>：允许集群内外访问应用</li>
+                </ul>
+
+                <div class="relation-diagram">
+                    <div class="diagram-container" style="flex-direction: column; align-items: center;">
+                        <div class="diagram-box object">Service (ClusterIP: 10.96.0.100)</div>
+                        <div class="diagram-arrow">⬆︎ 负载均衡 ⬆︎</div>
+                        <div style="display: flex; gap: 1rem;">
+                            <div class="diagram-box object">Pod 1 (10.244.1.5)</div>
+                            <div class="diagram-box object">Pod 2 (10.244.2.8)</div>
+                            <div class="diagram-box object">Pod 3 (10.244.3.2)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Service 类型</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>类型</th>
+                            <th>访问方式</th>
+                            <th>访问范围</th>
+                            <th>示例场景</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>ClusterIP</strong></td>
+                            <td>集群内部 IP</td>
+                            <td>仅集群内部</td>
+                            <td>微服务间通信</td>
+                        </tr>
+                        <tr>
+                            <td><strong>NodePort</strong></td>
+                            <td>节点 IP + 端口</td>
+                            <td>集群内外</td>
+                            <td>开发测试环境</td>
+                        </tr>
+                        <tr>
+                            <td><strong>LoadBalancer</strong></td>
+                            <td>云负载均衡器</td>
+                            <td>公网访问</td>
+                            <td>生产环境公网服务</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ExternalName</strong></td>
+                            <td>外部 DNS 名称</td>
+                            <td>外部服务</td>
+                            <td>访问外部数据库等</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Service 配置示例</h3>
+                <pre><code># ClusterIP Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  selector:
+    app: myapp
+  ports:
+  - protocol: TCP
+    port: 80        # Service 端口
+    targetPort: 8080  # Pod 目标端口
+  type: ClusterIP
+
+# NodePort Service
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 8080
+    nodePort: 30080  # 节点端口（30000-32767）
+
+# LoadBalancer Service
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 192.168.1.100  # 可选：指定 IP
+  ports:
+  - port: 80
+    targetPort: 8080</code></pre>
+
+                <h3>ExternalName Service</h3>
+                <pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: my-database
+spec:
+  type: ExternalName
+  externalName: database.example.com
+  # 访问 my-database.default.svc.cluster.local 会被 DNS 解析为 database.example.com</code></pre>
+            </section>
+
+            <!-- Headless Service -->
+            <section class="concept-section">
+                <h2>Headless Service <span class="badge badge-secondary">重要</span></h2>
+                <p>Headless Service 是一种不分配 ClusterIP 的 Service，通过它可以直接访问单个 Pod。</p>
+
+                <h3>Headless Service 的特点</h3>
+                <ul>
+                    <li><strong>无 ClusterIP</strong>：不分配集群 IP</li>
+                    <li><strong>DNS 直接返回 Pod IP</strong>：DNS 查询返回所有后端 Pod 的 IP</li>
+                    <li><strong>用于有状态服务</strong>：StatefulSet 必须使用 Headless Service</li>
+                    <li><strong>客户端负载均衡</strong>：客户端自己决定访问哪个 Pod</li>
+                </ul>
+
+                <pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: my-headless-service
+spec:
+  clusterIP: None  # 设置为 None 即为 Headless
+  selector:
+    app: myapp
+  ports:
+  - port: 80
+    targetPort: 8080</code></pre>
+
+                <h3>普通 Service vs Headless Service DNS 查询</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>类型</th>
+                            <th>DNS 返回</th>
+                            <th>用途</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>普通 Service</strong></td>
+                            <td>Service 的 ClusterIP</td>
+                            <td>负载均衡访问后端</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Headless Service</strong></td>
+                            <td>所有后端 Pod 的 IP</td>
+                            <td>直接访问特定 Pod、有状态服务</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Ingress -->
+            <section class="concept-section">
+                <h2>Ingress <span class="badge badge-primary">重要</span></h2>
+                <p>Ingress 是 Kubernetes 中暴露 HTTP/HTTPS 路由规则的 API，它提供从集群外部到集群内部服务的路由。</p>
+
+                <h3>Ingress vs Service</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>特性</th>
+                            <th>Service</th>
+                            <th>Ingress</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>协议</strong></td>
+                            <td>仅支持 TCP/UDP</td>
+                            <td>支持 HTTP/HTTPS</td>
+                        </tr>
+                        <tr>
+                            <td><strong>路由</strong></td>
+                            <td>基于 IP 和端口</td>
+                            <td>基于主机名和路径</td>
+                        </tr>
+                        <tr>
+                            <td><strong>复杂度</strong></td>
+                            <td>简单</td>
+                            <td>高级路由</td>
+                        </tr>
+                        <tr>
+                            <td><strong>所需数量</th></td>
+                            <td>每个服务一个</td>
+                            <td>可以通过一个暴露多个服务</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="relation-diagram">
+                    <div class="diagram-container" style="flex-direction: column; align-items: center; max-width: 700px;">
+                        <div class="diagram-box object">外部客户端</div>
+                        <div class="diagram-arrow">→ HTTP/HTTPS →</div>
+                        <div class="diagram-box object">Ingress Controller</div>
+                        <div class="diagram-arrow">→ 根据 Host/Path →</div>
+                        <div style="display: flex; gap: 1rem;">
+                            <div style="display: flex; flex-direction: column; align-items: center;">
+                                <div class="diagram-box object">Service 1</div>
+                                <div class="diagram-box object">Pods</div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: center;">
+                                <div class="diagram-box object">Service 2</div>
+                                <div class="diagram-box object">Pods</div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: center;">
+                                <div class="diagram-box object">Service 3</div>
+                                <div class="diagram-box object">Pods</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Ingress 配置示例</h3>
+                <pre><code>apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx  # 指定 Ingress Controller
+  tls:
+  - hosts:
+    - www.example.com
+    secretName: my-tls-secret  # TLS 证书
+  rules:
+  - host: www.example.com
+    http:
+      paths:
+      - path: /app1
+        pathType: Prefix
+        backend:
+          service:
+            name: service1
+            port:
+              number: 80
+      - path: /app2
+        pathType: Prefix
+        backend:
+          service:
+            name: service2
+            port:
+              number: 80</code></pre>
+
+                <h3>Ingress Controller</h3>
+                <p>Ingress 资源本身不执行任何操作，需要部署 Ingress Controller 来实现 Ingress 规则。</p>
+
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>Ingress Controller</th>
+                            <th>特点</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Nginx Ingress</strong></td>
+                            <td>最常用、功能丰富、性能好</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Traefik</strong></td>
+                            <td>自动服务发现、配置简单</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Kong</strong></td>
+                            <td>API 网关、插件丰富</td>
+                        </tr>
+                        <tr>
+                            <td><strong>HAProxy</strong></td>
+                            <td>成熟稳定、负载均衡</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Contour</strong></td>
+                            <td>基于 Envoy、HTTP/3 支持</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Istio Gateway</strong></td>
+                            <td>服务网格网关</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>PathType</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>PathType</th>
+                            <th>说明</th>
+                            <th>示例</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Exact</strong></td>
+                            <td>精确匹配路径</td>
+                            <td><code>/foo</code> 只匹配 <code>/foo</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Prefix</strong></td>
+                            <td>前缀匹配路径</td>
+                            <td><code>/foo</code> 匹配 <code>/foo</code>、<code>/foo/bar</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>ImplementationSpecific</strong></td>
+                            <td>由控制器决定</td>
+                            <td>取决于具体 Ingress Controller</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Gateway API -->
+            <section class="concept-section">
+                <h2>Gateway API</h2>
+                <p>Gateway API 是 Kubernetes 中一套新一代的 API，用于配置服务网络。</p>
+
+                <h3>Gateway API vs Ingress</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>特性</th>
+                            <th>Ingress</th>
+                            <th>Gateway API</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>可扩展性</strong></td>
+                            <td>有限</td>
+                            <td>高（可自定义协议）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>角色分离</strong></td>
+                            <td>单角色</td>
+                            <td>多角色（集群运维、应用开发者）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>协议支持</strong></td>
+                            <td>HTTP/HTTPS</td>
+                            <td>HTTP、gRPC、TCP、UDP 等</td>
+                        </tr>
+                        <tr>
+                            <td><strong>成熟度</strong></td>
+                            <td>成熟稳定</td>
+                            <td>发展中（v1.0 已发布）</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Gateway API 核心资源</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>资源</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>GatewayClass</strong></td>
+                            <td>定义 Gateway 的实现方式和配置</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Gateway</strong></td>
+                            <td>定义网络基础设施（LB、IP、端口）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>HTTPRoute</strong></td>
+                            <td>定义 HTTP 流量的路由规则</td>
+                        </tr>
+                        <tr>
+                            <td><strong>TCPRoute</strong></td>
+                            <td>定义 TCP 流量的路由规则</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ReferenceGrant</strong></td>
+                            <td>授权跨越命名空间引用资源</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- EndpointSlices -->
+            <section class="concept-section">
+                <h2>EndpointSlices</h2>
+                <p>EndpointSlices 是 Kubernetes 中用于跟踪 Pod IP 端点的资源，它是 Endpoints 的扩展，提供可扩展和可扩展的端点跟踪。</p>
+
+                <h3>EndpointSlices 的优势</h3>
+                <ul>
+                    <li><strong>可扩展</strong>：每个 EndpointSlice 最多 100 个端点，大量端点时创建多个</li>
+                    <li><strong>按拓扑分组</strong>：可以按节点、区域等拓扑信息分组</li>
+                    <li><strong>减少网络流量</strong>：只同步变化的部分</li>
+                    <li><strong>支持多协议</strong>：支持 TCP、UDP、SCTP 协议</li>
+                </ul>
+
+                <h3>Endpoints vs EndpointSlices</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>特性</th>
+                            <th>Endpoints</th>
+                            <th>EndpointSlices</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>端点数量</strong></td>
+                            <td>所有端点在一个对象中</td>
+                            <td>分片存储（最多 100 个/片）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>拓扑信息</th></td>
+                            <td>无</td>
+                            <td>有（zone、hostname）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>默认使用</th></td>
+                            <td>废弃中</td>
+                            <td>默认（v1.21+）</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- 网络策略 -->
+            <section class="concept-section">
+                <h2>网络策略 <span class="badge badge-secondary">安全</span></h2>
+                <p>网络策略（Network Policy）是 Kubernetes 中用于控制 Pod 之间网络流量的规则，类似于云安全组。</p>
+
+                <h3>网络策略的作用</h3>
+                <ul>
+                    <li><strong>隔离 Pod</strong>：限制 Pod 的入站和出站流量</li>
+                    <li><strong>白名单控制</strong>：只允许特定的流量通过</li>
+                    <li><strong>标签选择</strong>：通过标签选择器匹配 Pod</li>
+                    <li><strong>基于端口/协议</strong>：可以按端口和协议控制流量</li>
+                </ul>
+
+                <h3>策略类型</h3>
+                <ul>
+                    <li><strong>Ingress</strong>：入站流量（进入 Pod）</li>
+                    <li><strong>Egress</strong>：出站流量（从 Pod 出去）</li>
+                    <li><strong>两者都指定</strong>：同时控制入站和出站</li>
+                    <li><strong>都不指定</strong>：默认隔离（所有流量被拒绝）
+
+                <h3>网络策略示例</h3>
+                <pre><code># 允许来自特定命名空间的流量
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-from-frontend
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: frontend
+    ports:
+    - protocol: TCP
+      port: 80</code></pre>
+
+                <pre><code># 允许出站到特定服务的流量
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-to-database
+spec:
+  podSelector:
+    matchLabels:
+      app: myapp
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: database
+    ports:
+    - protocol: TCP
+      port: 5432</code></pre>
+
+                <div class="warning">
+                    <strong>重要：</strong>网络策略需要 CNI 插件支持（如 Calico、Cilium、Weave Net 等）。默认的 kube-proxy 不实现网络策略。
+                </div>
+            </section>
+
+            <!-- DNS -->
+            <section class="concept-section">
+                <h2>DNS</h2>
+                <p>Kubernetes 集群中包含一个 DNS 服务（CoreDNS），用于服务发现和名称解析。</p>
+
+                <h3>DNS 记录类型</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>记录类型</th>
+                            <th>格式</th>
+                            <th>解析结果</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><>A 记录</td>
+                            <td><code>my-svc.my-namespace.svc.cluster.local</code></td>
+                            <td>Service ClusterIP（Headless 返回 Pod IPs）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>SRV 记录</strong></td>
+                            <td><code>_my-port-name._my-port-protocol.my-svc.my-namespace.svc.cluster.local</code></td>
+                            <td>服务端口信息</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PTR 记录</strong></td>
+                            <td>Pod IP 反向查询</td>
+                            <td>Pod 主机名</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>DNS 名称规范</h3>
+                <pre><code># 完整 FQDN 格式
+&lt;service-name&gt;.&lt;namespace&gt;.svc.&lt;cluster-domain&gt;
+
+# 默认集群域：cluster.local
+# 示例：
+my-service.default.svc.cluster.local
+
+# 简写：
+- 同命名空间：my-service
+- 不同命名空间：my-service.other-namespace
+- 完整：my-service.default.svc.cluster.local</code></pre>
+
+                <h3>Headless Service DNS</h3>
+                <p>对于 Headless Service，DNS 查询会返回 A 记录指向所有 Pod 的 IP 而不是单个 ClusterIP。</p>
+
+                <pre><code># StatefulSet 示例
+# Pod 名称：web-0, web-1, web-2
+# DNS 名称：
+web-0.web.default.svc.cluster.local  →  10.244.1.5
+web-1.web.default.svc.cluster.local  →  10.244.2.6
+web-2.web.default.svc.cluster.local  →  10.244.3.7</code></pre>
+            </section>
+
+            <!-- IPv4/IPv6 双栈 -->
+            <section class="concept-section">
+                <h2>IPv4/IPv6 双栈</h2>
+                <p>Kubernetes 支持同时使用 IPv4 和 IPv6 地址，实现双栈网络。</p>
+
+                <h3>双栈网络特性</h3>
+                <ul>
+                    <li><strong>Pod 双地址</strong>：每个 Pod 可以同时拥有 IPv4 和 IPv6 地址</li>
+                    <li><strong>服务双地址</strong>：Service 可以同时监听 IPv4 和 IPv6</li>
+                    <li><strong>自动选择</strong>：客户端自动选择合适的协议族（Happy Eyeballs）</li>
+                </ul>
+
+                <h3>启用双栈网络</h3>
+                <pre><code># kube-controller-manager 配置
+--cluster-cidrs=10.244.0.0/16,fd00::/64
+
+# kube-proxy 配置
+--cluster-cidrs=10.244.0.0/16,fd00::/64
+--force-ipv6=false</code></pre>
+
+                <h3>双栈 Service</h3>
+                <pre><code># 双栈 Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  ipFamilies:
+  - IPv4
+  - IPv6
+  ipFamilyPolicy: RequireDualStack
+  selector:
+    app: myapp
+  ports:
+  - port: 80
+    targetPort: 8080</code></pre>
+
+                <h3>IPFamilyPolicy</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>策略</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>RequireDualStack</strong></td>
+                            <td>要求双栈，失败则不创建</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PreferDualStack</strong></td>
+                            <td>优先双栈，不可用时使用单栈</td>
+                        </tr>
+                        <tr>
+                            <td><strong>SingleStack</strong></td>
+                            <td>单栈，使用主协议族</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- 拓扑感知路由 -->
+            <section class="concept-section">
+                <h2>拓扑感知路由</h2>
+                <p>拓扑感知路由（Topology Aware Hints）是 Kubernetes 的一种优化特性，它使流量尽可能在同一拓扑域（可用区、主机）内路由，以减少延迟和成本。</p>
+
+                <h3>拓扑感知路由的优势</h3>
+                <ul>
+                    <li><strong>降低延迟</strong>：流量在同一区域内路由</li>
+                    <li><strong>减少成本</strong>：减少跨区域流量费用</li>
+                    <li><strong>提高性能</strong>：减少网络跳数</li>
+                </ul>
+
+                <div class="relation-diagram">
+                    <div class="diagram-container" style="flex-direction: column; align-items: center;">
+                        <div class="diagram-box object">Service</div>
+                        <div style="display: flex; gap: 1rem; justify-content: center;">
+                            <div style="display: flex; flex-direction: column; align-items: center;">
+                                <div class="diagram-box worker-node">可用区 A</div>
+                                <div class="diagram-box object">Pods</div>
+                                <div style="text-align: center; font-size: 0.8rem;">流量优先路由到此</div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: center;">
+                                <div class="diagram-box worker-node">可用区 B</div>
+                                <div class="diagram-box object">Pods</div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: center;">
+                                <div class="diagram-box worker-node">可用区 C</div>
+                                <div class="diagram-box object">Pods</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>启用拓扑感知路由</h3>
+                <pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+  annotations:
+    service.kubernetes.io/topology-aware-hints: auto
+spec:
+  selector:
+    app: myapp
+  ports:
+  - port: 80
+    targetPort: 8080</code></pre>
+
+                <div class="info">
+                    <strong>工作原理：</strong>EndpointSlice 控制器根据节点的拓扑标签（如 `topology.kubernetes.io/zone`）和可用资源，将 Pod 均匀分配到各个拓扑域。
+                </div>
+            </section>
+
+            <!-- 章节总结 -->
+            <section class="concept-section">
+                <h2>本章总结</h2>
+                <div class="success">
+                    <strong>关键要点：</strong>
+                    <ul>
+                        <li>Kubernetes 网络模型强调扁平 IP 网络，所有 Pod 可直接通信</li>
+                        <li>Service 提供稳定的服务发现和负载均衡</li>
+                        <li>Service 类型包括 ClusterIP、NodePort、LoadBalancer 和 ExternalName</li>
+                        <li>Headless Service 用于有状态服务，DNS 直接返回 Pod IP</li>
+                        <li>Ingress 提供 HTTP/HTTPS 路由，需要 Ingress Controller 实现</li>
+                        <li>Gateway API 是新一代服务网络 API，功能更强大</li>
+                        <li>网络策略控制 Pod 间流量，需要 CNI 插件支持</li>
+                        <li>CoreDNS 提供服务发现，支持 A、SRV、PTR 记录</li>
+                        <li>Kubernetes 支持 IPv4/IPv6 双栈网络</li>
+                        <li>拓扑感知路由优化流量路由，降低延迟和成本</li>
+                    </ul>
+                </div>
+
+                <div style="text-align: center; margin-top: 2rem;">
+                    <a href="storage.html" class="btn">继续学习：存储 →</a>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Kubernetes 核心概念学习指南 | 基于 <a href="https://kubernetes.io/docs/concepts/" target="_blank">Kubernetes 官方文档</a>整理</p>
+        </div>
+    </footer>
+</body>
+</html>

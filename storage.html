@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>存储 - Kubernetes 核心概念</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>💾 存储</h1>
+            <p class="subtitle">掌握持久化存储和卷管理</p>
+        </div>
+    </header>
+
+    <nav class="main-nav">
+        <div class="container">
+            <ul>
+                <li><a href="index.html">首页</a></li>
+                <li><a href="overview.html">概述</a></li>
+                <li><a href="architecture.html">集群架构</a></li>
+                <li><a href="containers.html">容器</a></li>
+                <li><a href="workloads.html">工作负载</a></li>
+                <li><a href="networking.html">网络</a></li>
+                <li><a href="storage.html" class="active">存储</a></li>
+                <li><a href="configuration.html">配置</a></li>
+                <li><a href="scheduling.html">调度</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main>
+        <div class="container">
+
+            <!-- 存储概述 -->
+            <section class="concept-section">
+                <h2>存储概述</h2>
+                <p>Kubernetes 的存储系统为 Pod 提供持久化存储支持，确保容器重启或迁移时数据不丢失。存储系统通过 Volume 抽象层支持多种存储后端。</p>
+
+                <h3>为什么需要持久化存储？</h3>
+                <ul>
+                    <li><strong>容器是临时的</strong>：容器重启时数据会丢失</li>
+                    <li><strong>应用需要持久化</strong>：数据库、文件存储等需要持久化</li>
+                    <li><strong>多容器共享</strong>：多个容器可能需要共享数据</li>
+                    <li><strong>状态迁移</strong>：Pod 迁移时需要保留状态</li>
+                </ul>
+
+                <div class="relation-diagram">
+                    <div class="diagram-container" style="flex-direction: column; align-items: center;">
+                        <div class="diagram-box object">Pod</div>
+                        <div class="diagram-arrow">⬇︎ 挂载 ⬇︎</div>
+                        <div class="diagram-box object">Volume (虚拟层)</div>
+                        <div class="diagram-arrow">⬇︎ 绑定到 ⬇︎</div>
+                        <div style="display: flex; gap: 1rem; justify-content: center;">
+                            <div class="diagram-box object" style="background: #ffd700;">PV</div>
+                            <div class="diagram-box object" style="background: #90EE90;">PVC</div>
+                        </div>
+                        <div class="diagram-arrow">⬇︎ 使用 ⬇︎</div>
+                        <div class="diagram-box object">StorageClass (动态创建) 或 物理存储</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Volume -->
+            <section class="concept-section">
+                <h2>Volume <span class="badge badge-primary">核心概念</span></h2>
+                <p>Volume 是 Kubernetes 中存储数据的目录，可以被 Pod 中的容器访问。Volume 的生命周期与 Pod 相同。</p>
+
+                <h3>Volume 的类型</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>类型</th>
+                            <th>说明</th>
+                            <th>持久化</th>
+                            <th>使用场景</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>emptyDir</strong></td>
+                            <td>节点上临时目录</td>
+                            <td>否</td>
+                            <td>临时数据、缓存</td>
+                        </tr>
+                        <tr>
+                            <td><strong>hostPath</strong></td>
+                            <td>节点主机文件系统</td>
+                            <td>依赖节点</td>
+                            <td>系统监控、日志</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PV/PVC</strong></td>
+                            <td>持久化卷</td>
+                            <td>是</td>
+                            <td>数据库、持久化应用</td>
+                        </tr>
+                        <tr>
+                            <td><strong>configMap</strong></td>
+                            <td>配置数据</td>
+                            <td>是</td>
+                            <td>注入配置文件</td>
+                        </tr>
+                        <tr>
+                            <td><strong>secret</strong></td>
+                            <td>敏感数据</td>
+                            <td>是</td>
+                            <td>注入证书、密钥</td>
+                        </tr>
+                        <tr>
+                            <td><strong>downwardAPI</strong></td>
+                            <td>Pod 信息</td>
+                            <td>否</td>
+                            <td>注入 Pod 元数据</td>
+                        </tr>
+                        <tr>
+                            <td><strong>projected</strong></td>
+                            <td>多源卷</td>
+                            <td>是</td>
+                            <td>组合多个卷</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Volume 使用示例</h3>
+                <pre><code># 使用 emptyDir
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pd
+spec:
+  containers:
+  - name: test-container
+    image: nginx
+    volumeMounts:
+    - mountPath: /cache
+      name: cache-volume
+  volumes:
+  - name: cache-volume
+    emptyDir:
+      sizeLimit: 500Mi  # 可选：限制大小
+
+# 使用 hostPath
+volumes:
+- name: host-path-volume
+  hostPath:
+    path: /var/log  # 节点主机路径
+    type: Directory  # 类型：Directory、File、Socket 等</code></pre>
+
+                <h3>emptyDir 应用场景</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>场景</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>共享数据</strong></td>
+                            <td>同一 Pod 内多个容器共享数据</td>
+                        </tr>
+                        <tr>
+                            <td><strong>临时文件</strong></td>
+                            <td>不需要持久化的临时数据</td>
+                        </tr>
+                        <tr>
+                            <td><strong>缓存</strong></td>
+                            <td>加速访问的缓存数据</td>
+                        </tr>
+                        <tr>
+                            <td><strong>排序中间文件</strong></td>
+                            <td>批处理任务的中间结果</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- PV 和 PVC -->
+            <section class="concept-section">
+                <h2>PV 和 PVC <span class="badge badge-primary">核心概念</span></h2>
+                <p>PersistentVolume (PV) 是集群级别的存储资源，PersistentVolumeClaim (PVC) 是命名空间级别的存储请求。</p>
+
+                <div class="relation-diagram">
+                    <div class="diagram-container" style="flex-direction: column; align-items: center;">
+                        <div class="diagram-box object">Pod</div>
+                        <div class="diagram-arrow">⬆︎ 使用 ⬆︎</div>
+                        <div class="diagram-box object" style="background: #90EE90;">PVC (PersistentVolumeClaim)</div>
+                        <div class="diagram-arrow">⬆︎ 绑定 ⬆︎</div>
+                        <div class="diagram-box object" style="background: #ffd700;">PV (PersistentVolume)</div>
+                        <div class="diagram-arrow">⬆︎ 提供存储 ⬆︎</div>
+                        <div class="diagram-box object">物理存储 (NFS/云存储等)</div>
+                    </div>
+                </div>
+
+                <h3>PV (PersistentVolume)</h3>
+                <p>PV 是集群级别的存储资源，独立于 Pod 存在。PV 由集群管理员创建或通过 StorageClass 动态创建。</p>
+
+                <pre><code>apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: my-pv
+spec:
+  capacity:
+    storage: 10Gi  # 存储容量
+  accessModes:
+    - ReadWriteOnce  # 访问模式
+  persistentVolumeReclaimPolicy: Delete  # 回收策略
+  storageClassName: manual  # 存储类
+  nfs:  # 存储类型
+    server: 192.168.1.100
+    path: /data/k8s</code></pre>
+
+                <h3>PV 访问模式</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>模式</th>
+                            <th>缩写</th>
+                            <th>说明</th>
+                            <th>支持存储</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>ReadWriteOnce</strong></td>
+                            <td>RWO</td>
+                            <td>单个节点读写</td>
+                            <td>NFS、Ceph、AWS EBS、GCE PD 等</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ReadOnlyMany</strong></td>
+                            <td>ROX</td>
+                            <td>多个节点只读</td>
+                            <td>NFS、Ceph 等</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ReadWriteMany</strong></td>
+                            <td>RWX</td>
+                            <td>多个节点读写</td>
+                            <td>NFS、Ceph、GlusterFS 等</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ReadWriteOncePod</strong></td>
+                            <td>RWOP</td>
+                            <td>单个 Pod 读写（v1.22+）</td>
+                            <td>块存储（如 AWS EBS）</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>PV 回收策略</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>策略</th>
+                            <th>PVC 删除时</th>
+                            <th>数据保留</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Retain</strong></td>
+                            <td>PV 状态变为 Released</td>
+                            <td>保留，需手动清理</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Delete</strong></td>
+                            <td>PV 和底层存储被删除</td>
+                            <td>删除，不保留</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Recycle</strong></td>
+                            <td>执行 <code>rm -rf /volume/*</code></td>
+                            <td>删除数据后可重用</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="warning">
+                    <strong>注意：</strong>Recycle 策略已在 v1.15 废弃，建议使用动态 provisioning。
+                </div>
+
+                <h3>PVC (PersistentVolumeClaim)</h3>
+                <p>PVC 是用户对存储的请求，类似于 Pod 对计算资源的请求。PVC 会自动绑定到满足条件的 PV。</p>
+
+                <pre><code>apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: my-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi  # 请求的存储容量
+  storageClassName: fast  # 可选：指定存储类</code></pre>
+
+                <h3>PVC 和 PV 绑定流程</h3>
+                <div class="flow-diagram">
+                    <div class="flow-step">1. 用户创建 PVC</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">2. K8s Watch 到 PVC 请求</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">3. 匹配满足条件的 PV</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">4. PVC 和 PV 绑定（一对一）</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">5. Pod 可以使用 PVC</div>
+                </div>
+
+                <h3>Pod 使用 PVC</h3>
+                <pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: mypod
+spec:
+  containers:
+  - name: myfrontend
+    image: nginx
+    volumeMounts:
+    - mountPath: "/var/www/html"
+      name: mypd
+  volumes:
+  - name: mypd
+    persistentVolumeClaim:
+      claimName: my-pvc  # 引用 PVC</code></pre>
+            </section>
+
+            <!-- 静态和动态供给 -->
+            <section class="concept-section">
+                <h2>静态和动态供给</h2>
+                <p>Kubernetes 支持两种 PV 供给方式：静态供给和动态供给。</p>
+
+                <h3>静态供给</h3>
+                <p>管理员预先创建 PV，PVC 请求时绑定到匹配的 PV。</p>
+
+                <div class="flow-diagram">
+                    <div class="flow-step">管理员创建 PV</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">用户创建 PVC</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">PVC 绑定到匹配的 PV</div>
+                </div>
+
+                <h3>动态供给</h3>
+                <p>通过 StorageClass 自动创建 PV，无需管理员预先创建。</p>
+
+                <div class="flow-diagram">
+                    <div class="flow-step">管理员创建 StorageClass</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">用户创建 PVC（指定 StorageClass）</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">自动创建 PV</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">PVC 绑定到新创建的 PV</div>
+                </div>
+
+                <h3>静态 vs 动态供给</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>特性</th>
+                            <th>静态供给</th>
+                            <th>动态供给</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>创建方式</strong></td>
+                            <td>管理员手动创建</td>
+                            <td>自动创建</td>
+                        </tr>
+                        <tr>
+                            <td><strong>灵活性</强></td>
+                            <td>低</td>
+                            <td>高</td>
+                        </tr>
+                        <tr>
+                            <td><strong>效率</strong></td>
+                            <td>低</td>
+                            <td>高</td>
+                        </tr>
+                        <tr>
+                            <td><strong>适用场景</th></td>
+                            <td>小规模、固定存储</td>
+                            <td>大规模、灵活需求</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- StorageClass -->
+            <section class="concept-section">
+                <h2>StorageClass <span class="badge badge-secondary">重要</span></h2>
+                <p>StorageClass 定义了存储的类型和参数，用于动态创建 PV。它类似云服务中的虚拟机规格（如 t2.micro、t2.large）。</p>
+
+                <h3>StorageClass 的组成</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>字段</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>provisioner</strong></td>
+                            <td>卷创建程序（如 kubernetes.io/aws-ebs）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>parameters</strong></td>
+                            <td>存储后端特定的参数</td>
+                        </tr>
+                        <tr>
+                            <td><strong>reclaimPolicy</strong></td>
+                            <td>回收策略（默认为 Delete）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>mountOptions</strong></td>
+                            <td>挂载选项</td>
+                        </tr>
+                        <tr>
+                            <td><strong>volumeBindingMode</strong></td>
+                            <td>卷绑定模式</td>
+                        </tr>
+                        <tr>
+                            <td><strong>allowedTopologies</strong></td>
+                            <td>允许的节点拓扑</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>StorageClass 示例</h3>
+                <pre><code># AWS EBS StorageClass
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: aws-ebs-sc
+provisioner: kubernetes.io/aws-ebs
+parameters:
+  type: gp2  # 卷类型
+  iopsPerGB: "10"  # IOPS
+  fsType: ext4  # 文件系统类型
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+
+# NFS StorageClass (需要 NFS provisioner)
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-sc
+provisioner: example.com/nfs
+parameters:
+  archiveOnDelete: "false"
+reclaimPolicy: Delete</code></pre>
+
+                <h3>默认 StorageClass</h3>
+                <p>可以指定一个 StorageClass 为默认，PVC 不指定时自动使用。</p>
+
+                <pre><code># 设置默认 StorageClass
+kubectl patch storageclass standard -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'</code></pre>
+
+                <h3>volumeBindingMode</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>模式</th>
+                            <th>说明</th>
+                            <th>优点</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Immediate</strong></td>
+                            <td>立即绑定（PVC 创建时）</td>
+                            <td>响应快</td>
+                        </tr>
+                        <tr>
+                            <td><strong>WaitForFirstConsumer</strong></td>
+                            <td>使用 Pod 时绑定（延迟绑定）</td>
+                            <td>根据 Pod 调度选择合适节点</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- 卷快照 -->
+            <section class="concept-section">
+                <h2>卷快照</h2>
+                <p>卷快照（Volume Snapshot）是卷在特定时间点的副本，可用于备份、恢复或克隆卷。</p>
+
+                <h3>快照类型</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>类型</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>VolumeSnapshot</strong></td>
+                            <td>快照请求，类似 PVC</td>
+                        </tr>
+                        <tr>
+                            <td><strong>VolumeSnapshotContent</strong></td>
+                            <td>实际快照内容，类似 PV</td>
+                        </tr>
+                        <tr>
+                            <td><strong>VolumeSnapshotClass</strong></td>
+                            <td>快照类，定义快照参数</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>创建快照</h3>
+                <pre><code># VolumeSnapshotClass
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: csi-hostpath-snapclass
+driver: hostpath.csi.k8s.io
+deletionPolicy: Delete
+
+# 创建快照
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshot
+metadata:
+  name: my-snapshot
+spec:
+  volumeSnapshotClassName: csi-hostpath-snapclass
+  source:
+    persistentVolumeClaimName: my-pvc  # 基于哪个 PVC 创建快照</code></pre>
+
+                <h3>从快照恢复 PVC</h3>
+                <pre><code>apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: restored-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: csi-hostpath-sc
+  resources:
+    requests:
+      storage: 10Gi
+  dataSource:
+    name: my-snapshot
+    kind: VolumeSnapshot
+    apiGroup: snapshot.storage.k8s.io</code></pre>
+            </section>
+
+            <!-- PV 克隆 -->
+            <section class="concept-section">
+                <h2>PV 克隆</h2>
+                <p>PV 克隆允许你创建现有卷的副本。这个特性需要在 PVC 中指定dataSource。</p>
+
+                <pre><code>apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cloned-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: csi-hostpath-sc
+  resources:
+    requests:
+      storage: 10Gi
+  dataSource:
+    name: original-pvc  # 要克隆的 PVC
+    kind: PersistentVolumeClaim</code></pre>
+
+                <div class="info">
+                    <strong>注意：</strong>克隆操作需要 CSI 驱动支持。
+                </div>
+            </section>
+
+            <!-- 局部临时存储 -->
+            <section class="concept-section">
+                <h2>本地临时存储</h2>
+                <p>本地临时存储（Ephemeral Storage）用于 Pod 运行时的临时数据，包括容器镜像层、可写容器层、日志等。</p>
+
+                <h3>本地临时存储来源</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>来源</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>容器镜像层</strong></td>
+                            <td>容器镜像占用的空间</td>
+                        </tr>
+                        <tr>
+                            <td><strong>可写容器层</strong></td>
+                            <td>容器运行时写入的数据</td>
+                        </tr>
+                        <tr>
+                            <td><strong>日志</strong></td>
+                            <td>容器和 kubelet 日志</td>
+                        </tr>
+                        <tr>
+                            <td><strong>emptyDir 卷</strong></td>
+                            <td>emptyDir 卷的数据</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>管理本地临时存储</h3>
+                <pre><code># API Server 配置
+--eviction-hard=memory.available&lt;100Mi,nodefs.available&lt;10%,nodefs.inodesFree&lt;5%,imagefs.available&lt;15%,imagefs.inodesFree&lt;10%
+
+# Pod 限制
+spec:
+  containers:
+  - name: mycontainer
+    image: myimage
+    resources:
+      limits:
+        ephemeral-storage: "2Gi"
+      requests:
+        ephemeral-storage: "1Gi"</code></pre>
+
+                <h3>临时存储驱逐策略</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>驱逐信号</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>nodefs.available</strong></td>
+                            <td>节点文件系统可用空间</td>
+                        </tr>
+                        <tr>
+                            <td><strong>nodefs.inodesFree</strong></td>
+                            <td>节点文件系统可用 inode</td>
+                        </tr>
+                        <tr>
+                            <td><strong>imagefs.available</strong></td>
+                            <td>镜像文件系统可用空间</td>
+                        </tr>
+                        <tr>
+                            <td><strong>imagefs.inodesFree</strong></td>
+                            <td>镜像文件系统可用 inode</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- 存储章节总结 -->
+            <section class="concept-section">
+                <h2>本章总结</h2>
+                <div class="success">
+                    <strong>关键要点：</strong>
+                    <ul>
+                        <li>Volume 是 Pod 中的存储抽象，生命周期与 Pod 相同</li>
+                        <li>emptyDir 用于临时数据，hostPath 用于节点主机文件系统</li>
+                        <li>PV 是集群级存储资源，PVC 是命名空间级存储请求</li>
+                        <li>PV 访问模式包括 RWO、ROX、RWX、RWOP</li>
+                        <li>PV 回收策略包括 Retain、Delete、Recycle</li>
+                        <li>动态供给通过 StorageClass 自动创建 PV</li>
+                        <li>StorageClass 定义存储类型、参数和回收策略</li>
+                        <li>快照用于卷的备份和恢复</li>
+                        <li>PV 克隆可以复制现有卷</li>
+                        <li>本地临时存储用于容器运行时的临时数据</li>
+                    </ul>
+                </div>
+
+                <div style="text-align: center; margin-top: 2rem;">
+                    <a href="configuration.html" class="btn">继续学习：配置 →</a>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Kubernetes 核心概念学习指南 | 基于 <a href="https://kubernetes.io/docs/concepts/" target="_blank">Kubernetes 官方文档</a>整理</p>
+        </div>
+    </footer>
+</body>
+</html>

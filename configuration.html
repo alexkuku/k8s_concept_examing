@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>配置 - Kubernetes 核心概念</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>⚙️ 配置</h1>
+            <p class="subtitle">管理应用配置和机密信息</p>
+        </div>
+    </header>
+
+    <nav class="main-nav">
+        <div class="container">
+            <ul>
+                <li><a href="index.html">首页</a></li>
+                <li><a href="overview.html">概述</a></li>
+                <li><a href="architecture.html">集群架构</a></li>
+                <li><a href="containers.html">容器</a></li>
+                <li><a href="workloads.html">工作负载</a></li>
+                <li><a href="networking.html">网络</a></li>
+                <li><a href="storage.html">存储</a></li>
+                <li><a href="configuration.html" class="active">配置</a></li>
+                <li><a href="scheduling.html">调度</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main>
+        <div class="container">
+
+            <!-- 配置概述 -->
+            <section class="concept-section">
+                <h2>配置概述</h2>
+                <p>Kubernetes 提供了灵活的配置管理机制，允许将配置信息与容器镜像分离，实现配置的版本控制和动态更新。</p>
+
+                <h3>为什么需要分离配置？</h3>
+                <ul>
+                    <li><strong>可重用性</strong>：同一个镜像可用于不同环境</li>
+                    <li><strong>安全性</strong>：敏感信息不暴露在镜像中</li>
+                    <li><strong>动态性</strong>：配置可以动态更新无需重建镜像</li>
+                    <li><strong>版本控制</strong>：配置独立于代码进行版本管理</li>
+                </ul>
+
+                <h3>Kubernetes 配置资源</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>资源</th>
+                            <th用途</th>
+                            <th>适用场景</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>ConfigMap</strong></td>
+                            <td>存储非敏感配置数据</td>
+                            <td>应用配置、环境变量、命令行参数</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Secret</strong></td>
+                            <td>存储敏感配置数据</td>
+                            <td>密码、证书、密钥、令牌</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Downward API</strong></td>
+                            <td>注入 Pod 信息</td>
+                            <td>Pod 名称、IP、标签等元数据</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- ConfigMap -->
+            <section class="concept-section">
+                <h2>ConfigMap <span class="badge badge-primary">核心概念</span></h2>
+                <p>ConfigMap 用于存储配置数据，以键值对形式存储，可以注入到 Pod 中作为环境变量或挂载为配置文件。</p>
+
+                <h3>ConfigMap 的特点</h3>
+                <ul>
+                    <li><strong>命名空间资源</strong>：属于特定命名空间</li>
+                    <li><strong>键值对存储</strong>：数据以键值对形式存储</li>
+                    <li><strong>大小限制</strong>：单个 ConfigMap 最大 1MB</li>
+                    <li><strong>不可加密</strong>：数据以明文存储（etcd 可以配置加密）</li>
+                    <li><strong>动态更新</strong>：挂载为文件时可以动态更新</li>
+                </ul>
+
+                <h3>创建 ConfigMap</h3>
+                <pre><code># 从目录创建
+kubectl create configmap my-config --from-file=./config/
+
+# 从文件创建
+kubectl create configmap my-config --from-file=./app.properties
+
+# 从键值对创建
+kubectl create configmap my-config \
+  --from-literal=host=example.com \
+  --from-literal=port=8080
+
+# YAML 定义
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: game-config
+data:
+  player_initial_lives: "3"
+  ui_properties_file_name: "user-interface.properties"
+  game.properties: |
+    enemy.types=aliens,monsters
+    player.maximum-lives=5
+  user-interface.properties: |
+    color.good=purple
+    color.bad=yellow
+    allow.rows=20</code></pre>
+
+                <h3>使用 ConfigMap</h3>
+                <pre><code># 作为环境变量
+apiVersion: v1
+kind: Pod
+metadata:
+  name: configmap-demo-pod
+spec:
+  containers:
+    - name: demo
+      image: alpine
+      command: ["sleep", "3600"]
+      env:
+        - name: PLAYER_INITIAL_LIVES
+          valueFrom:
+            configMapKeyRef:
+              name: game-config
+              key: player_initial_lives
+        - name: UI_PROPERTIES_FILE_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: game-config
+              key: ui_properties_file_name
+
+# 所有环境变量
+envFrom:
+  - configMapRef:
+      name: game-config
+
+# 挂载为文件
+volumeMounts:
+- name: config-volume
+  mountPath: /etc/config
+  readOnly: true
+volumes:
+- name: config-volume
+  configMap:
+    name: game-config
+    items:
+    - key: game.properties
+      path: game.properties
+    - key: user-interface.properties
+      path: ui.properties</code></pre>
+
+                <h3>ConfigMap 更新行为</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>使用方式</th>
+                            <th>更新行为</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>作为环境变量</strong></td>
+                            <td>不自动更新（需要重启 Pod）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>挂载为文件</strong></td>
+                            <td>自动更新（使用 symbolic link）</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="note">
+                    <strong>最佳实践：</strong>对于需要动态更新的配置，考虑使用 Volume 方式挂载 ConfigMap。对于环境变量，需要更新后重启 Pod。
+                </div>
+            </section>
+
+            <!-- Secret -->
+            <section class="concept-section">
+                <h2>Secret <span class="badge badge-secondary">安全</span></h2>
+                <p>Secret 用于存储敏感数据，如密码、证书、密钥等。Secret 与 ConfigMap 类似，但数据经过编码且更加安全。</p>
+
+                <h3>Secret 类型</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>类型</th>
+                            <th>说明</th>
+                            <th>用途</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Opaque</strong></td>
+                            <td>默认类型</td>
+                            <td>任意用户密码/密钥</td>
+                        </tr>
+                        <tr>
+                            <td><strong>kubernetes.io/service-account-token</strong></td>
+                            <td>ServiceAccount Token</td>
+                            <td>API 访问令牌</td>
+                        </tr>
+                        <tr>
+                            <td><strong>kubernetes.io/dockercfg</strong></td>
+                            <td>Docker 配置</td>
+                            <td>Docker Registry 认证</td>
+                        </tr>
+                        <tr>
+                            <td><strong>kubernetes.io/dockerconfigjson</strong></td>
+                            <td>Docker 配置（JSON）</td>
+                            <td>Docker Registry 认证</td>
+                        </tr>
+                        <tr>
+                            <td><strong>kubernetes.io/basic-auth</strong></td>
+                            <td>基本认证</td>
+                            <td>用户名/密码</td>
+                        </tr>
+                        <tr>
+                            <td><strong>kubernetes.io/ssh-auth</strong></td>
+                            <td>SSH 认证</td>
+                            <td>SSH 密钥</td>
+                        </tr>
+                        <tr>
+                            <td><strong>kubernetes.io/tls</strong></td>
+                            <td>TLS 证书</td>
+                            <td>SSL/TLS 证书</td>
+                        </tr>
+                        <tr>
+                            <td><strong>bootstrap.kubernetes.io/token</strong></td>
+                            <td>Bootstrap Token</td>
+                            <td>节点加入集群的令牌</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>创建 Secret</h3>
+                <pre><code># 从命令行创建（自动 base64 编码）
+kubectl create secret generic my-secret \
+  --from-literal=password=mypassword \
+  --from-literal=username=myuser
+
+# 从文件创建
+kubectl create secret tls my-tls-secret \
+  --cert=path/to/cert/file \
+  --key=path/to/key/file
+
+# Docker Registry Secret
+kubectl create secret docker-registry regcred \
+  --docker-server=DOCKER_REGISTRY_SERVER \
+  --docker-username=DOCKER_USER \
+  --docker-password=DOCKER_PASSWORD
+
+# YAML 定义
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-secret
+type: Opaque
+data:
+  username: YWRtaW4=  # base64 编码的 "admin"
+  password: MWYyZDFlMmU2N2Rm  # base64 编码的密码</code></pre>
+
+                <h3>使用 Secret</h3>
+                <pre><code># 作为环境变量
+env:
+- name: SECRET_USERNAME
+  valueFrom:
+    secretKeyRef:
+      name: my-secret
+      key: username
+
+# 挂载为文件
+volumeMounts:
+- name: secret-volume
+  mountPath: "/etc/secrets"
+  readOnly: true
+volumes:
+- name: secret-volume
+  secret:
+    secretName: my-secret
+    items:
+    - key: username
+      path: my-group/my-username
+
+# 拉取镜像时使用
+imagePullSecrets:
+- name: regcred</code></pre>
+
+                <h3>Secret 安全性</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>安全措施</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Base64 编码</strong></td>
+                            <td>数据经过 Base64 编码（非加密）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>etcd 加密</strong></td>
+                            <td>可以配置 etcd 存储加密</td>
+                        </tr>
+                        <tr>
+                            <td><strong>RBAC</strong></td>
+                            <td>通过 RBAC 控制访问权限</td>
+                        </tr>
+                        <tr>
+                            <td><strong>最小权限</strong></td>
+                            <td>Pod 只挂载需要的 Secret</td>
+                        </tr>
+                        <tr>
+                            <td><strong>临时文件系统</strong></td>
+                            <td>Secret 挂载为 tmpfs（内存存储）</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="warning">
+                    <strong>重要：</strong>Base64 不是加密！Secret 只是为了避免敏感信息出现在 Pod 定义中，不是安全存储解决方案。使用时结合 etcd 加密、RBAC 等安全措施。
+                </div>
+            </section>
+
+            <!-- 探针 -->
+            <section class="concept-section">
+                <h2>探针 <span class="badge badge-primary">重要</span></h2>
+                <p>探针（Probes）用于检测容器和 Pod 的健康状态，包括存活探针、就绪探针和启动探针。</p>
+
+                <h3>探针类型</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>探针</th>
+                            <th>用途</th>
+                            <th>失败后果</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Liveness Probe</strong></td>
+                            <td>检测容器是否正常运行</td>
+                            <td>重启容器</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Readiness Probe</strong></td>
+                            <td>检测容器是否准备好接收流量</td>
+                            <td>从 Service 移除</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Startup Probe</strong></td>
+                            <td>检测容器是否启动完成</td>
+                            <td>禁用其他探针</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>探针配置示例</h3>
+                <pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: liveness-http
+spec:
+  containers:
+  - name: liveness
+    image: registry.k8s.io/liveness
+    args:
+    - /server
+    livenessProbe:
+      httpGet:
+        path: /healthz
+        port: 8080
+      initialDelaySeconds: 15  # 容器启动后等待 15 秒才开始探测
+      periodSeconds: 20        # 每 20 秒探测一次
+      timeoutSeconds: 1        # 超时时间 1 秒
+      successThreshold: 1     # 成功 1 次即认为健康
+      failureThreshold: 3     # 失败 3 次才认为不健康</code></pre>
+
+                <h3>探针执行方式</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>方式</th>
+                            <th>说明</th>
+                            <th>示例</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>ExecAction</strong></td>
+                            <td>在容器内执行命令</td>
+                            <td>检查文件是否存在</td>
+                        </tr>
+                        <tr>
+                            <td><strong>HTTPGetAction</strong></td>
+                            <td>发送 HTTP GET 请求</td>
+                            <td>检查 /healthz 端点</td>
+                        </tr>
+                        <tr>
+                            <td><strong>TCPSocketAction</strong></td>
+                            <td>尝试建立 TCP 连接</td>
+                            <td>检查端口是否开放</td>
+                        </tr>
+                        <tr>
+                            <td><strong>gRPC (v1.24+)</strong></td>
+                            <td>发送 gRPC 健康检查</td>
+                            <td>检查 gRPC 服务健康状态</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="info">
+                    <strong>探针使用建议：</strong>
+                    <ul>
+                        <li>Liveness Probe 用于检测容器是否崩溃或死锁</li>
+                        <li>Readiness Probe 用于应用启动时间较长或依赖其他服务</li>
+                        <li>Startup Probe 用于应用启动时间很长（保护 Liveness/Readiness 探针）</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- 资源管理 -->
+            <section class="concept-section">
+                <h2>资源管理</h2>
+                <p>Kubernetes 允许为 Pod 和容器指定资源请求（requests）和限制（limits），用于资源分配和调度。</p>
+
+                <h3>资源类型</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>资源</th>
+                            <th>说明</th>
+                            <th>单位</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>CPU</strong></td>
+                            <td>计算资源</td>
+                            <td>Cores (1000m = 1 Core)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Memory</strong></td>
+                            <td>内存资源</td>
+                            <td>Bytes (Mi, Gi)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Storage (Ephemeral)</strong></td>
+                            <td>临时存储</td>
+                            <td>Bytes (Mi, Gi)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Hugepages-<size></strong></td>
+                            <td>大页内存</td>
+                            <td>固定大小页</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Resource Requests 和 Limits</h3>
+                <pre><code>resources:
+  requests:
+    cpu: "100m"        # 请求 0.1 CPU
+    memory: "128Mi"    # 请求 128MB 内存
+  limits:
+    cpu: "500m"        # 限制最多 0.5 CPU
+    memory: "256Mi"    # 限制最多 256MB 内存</code></pre>
+
+                <h3>资源请求和限制的作用</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>设置</th>
+                            <th>调度</th>
+                            <th>运行时</th>
+                            <th>超出行为</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>只有 Request</strong></td>
+                            <td>用于调度决策</td>
+                            <td>使用节点可用资源</td>
+                            <td>可能 OOM killed</td>
+                        </tr>
+                        <tr>
+                            <td><strong>只有 Limit</strong></td>
+                            <td>Request = Limit</td>
+                            <td>限制资源使用</td>
+                            <td>被限制</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Request = Limit</strong></td>
+                            <td>保证资源</td>
+                            <td>严格限制</td>
+                            <td>QoS Guarantee</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Request < Limit</strong></td>
+                            <td>保证资源</td>
+                            <td>有限爆发</td>
+                            <td>QoS Burstable</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>QoS Classes</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>QoS 类</th>
+                            <th>条件</th>
+                            <th>特点</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Guaranteed</strong></td>
+                            <td>所有容器的 Request = Limit</td>
+                            <td>保证资源，优先级最高</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Burstable</strong></td>
+                            <td>至少一个容器有 Request，但不是 Guaranteed</td>
+                            <td>可以使用额外资源，优先级中等</td>
+                        </tr>
+                        <tr>
+                            <td><strong>BestEffort</strong></td>
+                            <td>没有设置 Request 和 Limit</td>
+                            <td>尽力而为，优先级最低</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Downward API -->
+            <section class="concept-section">
+                <h2>Downward API</h2>
+                <p>Downward API 允许容器获取自身和 Pod 的元数据，如 Pod 名称、IP、标签等。</p>
+
+                <h3>Downward API 功能</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>功能</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>FieldRef</strong></td>
+                            <td>引用 Pod 的字段</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ResourceFieldRef</strong></td>
+                            <td>引用容器资源请求/限制</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ConfigMapKeyRef</strong></td>
+                            <td>引用 ConfigMap 中的值</td>
+                        </tr>
+                        <tr>
+                            <td><strong>SecretKeyRef</strong></td>
+                            <td>引用 Secret 中的值</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Downward API 示例</h3>
+                <pre><code># 作为环境变量
+env:
+- name: MY_POD_NAME
+  valueFrom:
+    fieldRef:
+      fieldPath: metadata.name
+- name: MY_POD_IP
+  valueFrom:
+    fieldRef:
+      fieldPath: status.podIP
+- name: MY_CPU_REQUEST
+  valueFrom:
+    resourceFieldRef:
+      resource: requests.cpu
+
+# 挂载为文件
+volumeMounts:
+- name: podinfo
+  mountPath: /etc/podinfo
+  readOnly: true
+volumes:
+- name: podinfo
+  downwardAPI:
+    items:
+    - path: "labels"
+      fieldRef:
+        fieldPath: metadata.labels
+    - path: "annotations"
+      fieldRef:
+        fieldPath: metadata.annotations</code></pre>
+            </section>
+
+            <!-- 配置章节总结 -->
+            <section class="concept-section">
+                <h2>本章总结</h2>
+                <div class="success">
+                    <strong>关键要点：</strong>
+                    <ul>
+                        <li>ConfigMap 用于存储非敏感配置，可以注入为环境变量或文件</li>
+                        <li>Secret 用于存储敏感信息，数据存储时要结合安全措施</li>
+                        <li>探针用于健康检查，包括 Liveness、Readiness 和 Startup 探针</li>
+                        <li>资源 Request 和 Limits 用于资源分配和调度</li>
+                        <li>QoS 类包括 Guaranteed、Burstable 和 BestEffort</li>
+                        <li>Downward API 允许容器获取自身和 Pod 的元数据</li>
+                        <li>配置管理实现了配置与镜像的分离，提高了应用的可维护性</li>
+                    </ul>
+                </div>
+
+                <div style="text-align: center; margin-top: 2rem;">
+                    <a href="scheduling.html" class="btn">继续学习：调度 →</a>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Kubernetes 核心概念学习指南 | 基于 <a href="https://kubernetes.io/docs/concepts/" target="_blank">Kubernetes 官方文档</a>整理</p>
+        </div>
+    </footer>
+</body>
+</html>

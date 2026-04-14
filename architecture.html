@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>集群架构 - Kubernetes 核心概念</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🏗️ 集群架构</h1>
+            <p class="subtitle">深入理解 Kubernetes 控制平面和工作节点</p>
+        </div>
+    </header>
+
+    <nav class="main-nav">
+        <div class="container">
+            <ul>
+                <li><a href="index.html">首页</a></li>
+                <li><a href="overview.html">概述</a></li>
+                <li><a href="architecture.html" class="active">集群架构</a></li>
+                <li><a href="containers.html">容器</a></li>
+                <li><a href="workloads.html">工作负载</a></li>
+                <li><a href="networking.html">网络</a></li>
+                <li><a href="storage.html">存储</a></li>
+                <li><a href="configuration.html">配置</a></li>
+                <li><a href="scheduling.html">调度</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main>
+        <div class="container">
+
+            <!-- 集群概述 -->
+            <section class="concept-section">
+                <h2>Kubernetes 集群架构概述</h2>
+                <p>Kubernetes 集群由一组运行容器化应用的机器（节点）组成。集群分为两个主要部分：<strong>控制平面</strong>（Control Plane）和<strong>工作节点</strong>（Worker Nodes）。</p>
+
+                <div class="relation-diagram">
+                    <div class="diagram-container" style="flex-direction: column; align-items: center; max-width: 800px;">
+                        <div class="diagram-box control-plane" style="min-width: 300px;">控制平面 (Control Plane)</div>
+                        <div class="diagram-arrow">⬆︎ 管理/协调 ⬆︎</div>
+                        <div class="diagram-arrow">⬇︎ 通信/监控 ⬇︎</div>
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                            <div class="diagram-box worker-node">工作节点 1</div>
+                            <div class="diagram-box worker-node">工作节点 2</div>
+                            <div class="diagram-box worker-node">工作节点 3</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info">
+                    <strong>集群核心特点：</strong>
+                    <ul>
+                        <li><strong>分布式架构</strong>：控制平面和工作节点可以分布在多台机器上</li>
+                        <li><strong>高可用性</strong>：控制平面组件可以部署多个副本以提高可用性</li>
+                        <li><strong>可扩展性</strong>：可以动态添加或移除工作节点</li>
+                        <li><strong>自愈能力</strong>：组件故障时自动恢复</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- 控制平面详解 -->
+            <section class="concept-section">
+                <h2>控制平面详解</h2>
+                <p>控制平面（也称 Master 节点）是 Kubernetes 集群的"大脑"，负责集群的决策、管理和协调。它包含以下核心组件：</p>
+
+                <div class="flow-diagram">
+                    <div class="flow-step">etcd (存储)</div>
+                    <div class="flow-arrow">⇄</div>
+                    <div class="flow-step">API Server (入口)</div>
+                    <div class="flow-arrow">→→→</div>
+                    <div style="display: flex; gap: 1rem; justify-content: center; align-items: center;">
+                        <div class="flow-step" style="min-width: 150px;">Scheduler</div>
+                        <div class="flow-step" style="min-width: 150px;">Controller Manager</div>
+                        <div class="flow-step" style="min-width: 150px;">Cloud Controller</div>
+                    </div>
+                </div>
+
+                <h3>1. API Server (kube-apiserver)</h3>
+                <div class="note">
+                    <strong>核心作用：</strong>API Server 是整个 Kubernetes 系统的<strong>统一入口</strong>，是所有组件（内部和外部）与集群通信的唯一接口。
+                </div>
+
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>功能</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>RESTful API</strong></td>
+                            <td>提供 REST 风格的 API 接口，支持 JSON 和 Protobuf 格式</td>
+                        </tr>
+                        <tr>
+                            <td><strong>认证和授权</strong></td>
+                            <td>对所有请求进行身份验证和权限检查</td>
+                        </tr>
+                        <tr>
+                            <td><strong>准入控制</strong></td>
+                            <td>通过准入控制器对请求进行扩展和验证</td>
+                        </tr>
+                        <tr>
+                            <td><strong>数据验证</strong></td>
+                            <td>验证请求的数据格式和有效性</td>
+                        </tr>
+                        <tr>
+                            <td><strong>持久化</strong></td>
+                            <td>将状态数据持久化到 etcd</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>2. etcd</h3>
+                <div class="note">
+                    <strong>核心作用：</strong>etcd 是 Kubernetes 的<strong>后端数据库</strong>，存储整个集群的配置和状态信息，是集群的"单一事实来源"。
+                </div>
+
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>特性</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>键值存储</strong></td>
+                            <td>使用键值对方式存储数据</td>
+                        </tr>
+                        <tr>
+                            <td><strong>一致性</strong></td>
+                            <td>基于 Raft 协议，保证数据强一致性</td>
+                        </tr>
+                        <tr>
+                            <td><strong>高可用</strong></td>
+                            <td>支持集群模式，可以部署多个副本</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Watch 机制</strong></td>
+                            <td>支持监听数据变化，通知订阅者</td>
+                        </tr>
+                        <tr>
+                            <td><strong>事务支持</strong></td>
+                            <td>支持多键事务操作</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>etcd 存储的数据类型</h3>
+                <ul>
+                    <li>节点信息（Node 对象）
+                    <li>Pod 信息（Pod 对象）
+                    <li>服务信息（Service 对象）
+                    <li>配置信息（ConfigMap、Secret 对象）
+                    <li>存储信息（PV、PVC 对象）
+                    <li>集群配置和策略
+                    <li>用户和权限信息
+                </ul>
+
+                <h3>3. Scheduler (kube-scheduler)</h3>
+                <div class="note">
+                    <strong>核心作用：</strong>Scheduler 负责<strong>调度 Pod</strong>，将新创建的 Pod 分配到合适的节点上运行。
+                </div>
+
+                <h4>调度流程</h4>
+                <div class="flow-diagram">
+                    <div class="flow-step">1. 监听未绑定的 Pod</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">2. 过滤不合适的节点</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">3. 对候选节点打分</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">4. 选择最高分节点</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">5. 绑定 Pod 到节点</div>
+                </div>
+
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>调度策略</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>资源请求</strong></td>
+                            <td>根据 Pod 的 CPU、内存需求选择有足够资源的节点</td>
+                        </tr>
+                        <tr>
+                            <td><strong>节点选择器</strong></td>
+                            <td>根据 nodeSelector 匹配节点的标签</td>
+                        </tr>
+                        <tr>
+                            <td><strong>污点和容忍度</strong></td>
+                            <td>根据节点上的污点和 Pod 的容忍度进行匹配</td>
+                        </tr>
+                        <tr>
+                            <td><strong>亲和性/反亲和性</strong></td>
+                            <td>根据 Pod 的亲和性和反亲和性规则调度</td>
+                        </tr>
+                        <tr>
+                            <td><strong>资源利用率</strong></td>
+                            <td>优先选择资源利用率较均衡的节点</td>
+                        </tr>
+                        <tr>
+                            <td><strong>拓扑传播约束</strong></td>
+                            <td>控制 Pod 在不同拓扑域（如机架、可用区）的分布</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>4. Controller Manager (kube-controller-manager)</h3>
+                <div class="note">
+                    <strong>核心作用：</strong>Controller Manager 运行<strong>控制器进程</strong>，监控集群状态并通过 API Server 进行调整，确保集群实际状态与期望状态一致。
+                </div>
+
+                <h4>包含的控制器</h4>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>控制器</th>
+                            <th>功能</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Node Controller</strong></td>
+                            <td>监控节点状态，处理节点故障和心跳</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Replication Controller</strong></td>
+                            <td>确保指定数量的 Pod 副本在运行</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Endpoints Controller</strong></td>
+                            <td>维护 Service 的后端端点列表</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Service Account Controller</strong></td>
+                            <td>为命名空间创建默认的 ServiceAccount</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Token Controller</strong></td>
+                            <td>创建 API 访问令牌</td>
+                        </tr>
+                        <tr>
+                            <td><strong>CronJob Controller</strong></td>
+                            <td>管理定时任务</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Deployment Controller</strong></td>
+                            <td>管理 Deployment 和执行滚动更新</td>
+                        </tr>
+                        <tr>
+                            <td><strong>StatefulSet Controller</strong></td>
+                            <td>管理有状态应用</td>
+                        </tr>
+                        <tr>
+                            <td><strong>DaemonSet Controller</strong></td>
+                            <td>确保每个节点运行所需 Pod</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Job Controller</strong></td>
+                            <td>管理一次性任务</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>控制器工作循环</h4>
+                <div class="flow-diagram">
+                    <div class="flow-step">Watch 监听资源变化</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">对比期望状态 vs 实际状态</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">有差异？</div>
+                    <div class="flow-arrow">是</div>
+                    <div class="flow-step">执行调整操作</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">返回 Watch（持续循环）</div>
+                </div>
+
+                <h3>5. Cloud Controller Manager</h3>
+                <div class="note">
+                    <strong>核心作用：</strong>Cloud Controller Manager 是<strong>云服务提供商的接口</strong>，将 Kubernetes 与底层云平台集成。
+                </div>
+
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>控制器</th>
+                            <th>支持的云平台</th>
+                            <th>功能</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Node Controller</strong></td>
+                            <td>所有平台</td>
+                            <td>管理云主机节点的生命周期</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Route Controller</strong></td>
+                            <td>AWS, GCE</td>
+                            <td>配置云平台的路由表</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Service Controller</strong></td>
+                            <td>AWS, GCE, Azure</td>
+                            <td>创建云平台的负载均衡器</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Volume Controller</strong></td>
+                            <td>AWS, GCE, Azure</td>
+                            <td>创建和挂载云平台的存储卷</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="warning">
+                    <strong>注意：</strong>如果你的集群运行在裸金属服务器上（不使用任何云平台），可以不部署 Cloud Controller Manager。
+                </div>
+            </section>
+
+            <!-- 工作节点详解 -->
+            <section class="concept-section">
+                <h2>工作节点详解</h2>
+                <p>工作节点（Worker Node）是 Kubernetes 集群中运行容器化应用的工作机。每个工作节点都运行以下组件：</p>
+
+                <div class="relation-diagram">
+                    <div class="diagram-container" style="flex-direction: column; align-items: center;">
+                        <div class="diagram-box worker-node">工作节点</div>
+                        <div style="text-align: center; margin: 10px;">↓ 包含 ↓</div>
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                            <div class="diagram-box object">Kubelet</div>
+                            <div class="diagram-box object">Kube-proxy</div>
+                            <div class="diagram-box object">Container Runtime</div>
+                        </div>
+                        <div style="text-align: center; margin: 10px;">↓ 运行 ↓</div>
+                        <div class="diagram-box object">Pods (容器)</div>
+                    </div>
+                </div>
+
+                <h3>1. Kubelet</h3>
+                <div class="note">
+                    <strong>核心作用：</strong>Kubelet 是节点的<strong>主要代理</strong>，负责与控制平面通信，管理节点上的 Pod 和容器。
+                </div>
+
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>功能</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>接收指令</strong></td>
+                            <td>从控制平面接收 Pod 分配和更新指令</td>
+                        </tr>
+                        <tr>
+                            <td><strong>管理容器</strong></td>
+                            <td>通过容器运行时创建、启动、停止和删除容器</td>
+                        </tr>
+                        <tr>
+                            <td><strong>健康检查</strong></td>
+                            <td>定期向控制平面汇报节点和 Pod 的健康状态</td>
+                        </tr>
+                        <tr>
+                            <td><strong>监控资源</strong></td>
+                            <td>监控节点的 CPU、内存、磁盘等资源使用情况</td>
+                        </tr>
+                        <tr>
+                            <td><strong>挂载卷</strong></td>
+                            <td>为 Pod 挂载所需的存储卷</td>
+                        </tr>
+                        <tr>
+                            <td><strong>垃圾回收</strong></td>
+                            <td>清理未使用的容器、镜像等资源</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Kubelet 工作流程</h4>
+                <div class="flow-diagram">
+                    <div class="flow-step">1. 向 API Server 注册节点</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">2. 定期同步节点状态</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">3. 接收 Pod 分配</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">4. 通过 CRI 创建容器</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">5. 监控容器状态</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">6. 上报 Pod 状态</div>
+                </div>
+
+                <h3>2. Kube-proxy</h3>
+                <div class="note">
+                    <strong>核心作用：</strong>Kube-proxy 是节点的<strong>网络代理</strong>，负责维护节点上的网络规则，实现 Service 的负载均衡。
+                </div>
+
+                <h4>Kube-proxy 工作模式</h4>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>模式</th>
+                            <th>实现方式</th>
+                            <th>优点</th>
+                            <th>缺点</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Userspace</strong></td>
+                            <td>用户空间代理</td>
+                            <td>兼容性好</td>
+                            <td>性能差，已弃用</td>
+                        </tr>
+                        <tr>
+                            <td><strong>iptables</strong></td>
+                            <td>使用 iptables 规则</td>
+                            <td>成熟稳定，广泛使用</td>
+                            <td>大量规则时性能下降</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ipvs</strong></td>
+                            <td>使用 IPVS 负载均衡</td>
+                            <td>性能高，支持复杂调度</td>
+                            <td>配置稍复杂</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Kernelspace</strong></td>
+                            <td>内核空间代理</td>
+                            <td>性能最高</td>
+                            <td>需要内核支持</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Kube-proxy 主要功能</h4>
+                <ul>
+                    <li><strong>服务发现</strong>：监听 Service 和 Endpoints 的变化
+                    <li><strong>负载均衡</strong>：将流量分发到后端 Pod
+                    <li><strong>网络规则</strong>：维护 iptables 或 ipvs 规则
+                    <li><strong>健康检查</strong>：移除不健康的后端
+                </ul>
+
+                <h3>3. Container Runtime (容器运行时)</h3>
+                <div class="note">
+                    <strong>核心作用：</strong>容器运行时是<strong>真正运行容器的软件</strong>，负责下载镜像、创建容器、管理容器生命周期。
+                </div>
+
+                <h4>支持的容器运行时</h4>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>运行时</th>
+                            <th>状态</th>
+                            <th>特点</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Docker</strong></td>
+                            <td style="color: var(--warning-color);">⚠️ 社区版已弃用</td>
+                            <td>最常见，通过 dockershim 兼容</td>
+                        </tr>
+                        <tr>
+                            <td><strong>containerd</strong></td>
+                            <td style="color: var(--success-color);">✓ 推荐</td>
+                            <td>轻量、高效、稳定</td>
+                        </tr>
+                        <tr>
+                            <td><strong>CRI-O</strong></td>
+                            <td style="color: var(--success-color);">✓ 推荐</td>
+                            <td>专为 Kubernetes 设计，轻量</td>
+                        </tr>
+                        <tr>
+                            <td><strong>gVisor</strong></td>
+                            <td style="color: var(--primary-color);">↑ 发展中</td>
+                            <td>提供安全沙箱环境</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Kata Containers</strong></td>
+                            <td style="color: var(--primary-color);">↑ 发展中</td>
+                            <td>基于虚拟机的容器运行时</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>CRI (Container Runtime Interface)</h4>
+                <p>CRI 是 Kubernetes 与容器运行时之间的<strong>标准接口</strong>。通过 CRI，Kubernetes 可以与任何实现了该接口的容器运行时配合工作。</p>
+            </section>
+
+            <!-- 节点通信 -->
+            <section class="concept-section">
+                <h2>节点与控制平面之间的通信</h2>
+                <p>Kubernetes 集群中的各组件需要相互通信才能正常工作。通信主要通过以下方式：</p>
+
+                <div class="relation-diagram">
+                    <div class="diagram-container" style="flex-direction: column; align-items: center; max-width: 700px;">
+                        <div class="diagram-box control-plane">控制平面</div>
+                        <div class="diagram-arrow">⬆︎ HTTPS REST API ⬆︎</div>
+                        <div class="diagram-arrow">⬇︎ 心跳/状态上报 ⬇︎</div>
+                        <div class="diagram-box worker-node">工作节点 (Kubelet)</div>
+                    </div>
+                </div>
+
+                <h3>通信模式</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>方向</th>
+                            <th>发起方</th>
+                            <th>接收方</th>
+                            <th>协议</th>
+                            <th>内容</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>控制平面 → 节点</strong></td>
+                            <td>API Server</td>
+                            <td>Kubelet</td>
+                            <td>HTTPS</td>
+                            <td>Pod 分配、更新、删除指令</td>
+                        </tr>
+                        <tr>
+                            <td><strong>节点 → 控制平面</strong></td>
+                            <td>Kubelet</td>
+                            <td>API Server</td>
+                            <td>HTTPS</td>
+                            <td>节点状态、Pod 状态、心跳</td>
+                        </tr>
+                        <tr>
+                            <td><strong>调度器 → 节点</strong></td>
+                            <td>Scheduler</td>
+                            <td>Kubelet</td>
+                            <td>通过 API Server</td>
+                            <td>Pod 绑定信息</td>
+                        </tr>
+                        <tr>
+                            <td><strong>控制平面 → 节点</strong></td>
+                            <td>Controller Manager</td>
+                            <td>Kube-proxy</td>
+                            <td>通过 API Server</td>
+                            <td>Service 和 Endpoints 变化</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="note">
+                    <strong>通信安全：</strong>
+                    <ul>
+                        <li>所有控制平面到节点的通信都使用 HTTPS 加密</li>
+                        <li>使用 TLS 证书验证身份</li>
+                        <li>支持双向认证（MTLS）</li>
+                        <li>可以通过 ServiceAccount 进行细粒度权限控制</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- 租约 -->
+            <section class="concept-section">
+                <h2>租约 (Leases)</h2>
+                <p>租约是 Kubernetes 中的一种机制，用于表示分布式系统中<strong>领导者选举</strong>和<strong>心跳</strong>的协调原语。</p>
+
+                <h3>租约的主要用途</h3>
+                <ul>
+                    <li><strong>节点心跳</strong>：kubelet 使用租约向控制平面汇报节点存活
+                    <li><strong>控制器领导选举</strong>：多个控制器副本使用租约选举主控制器
+                    <li><strong>锁机制</strong>：防止多个组件同时执行某个操作
+                </ul>
+
+                <h3>租约 vs 心跳机制</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>特性</th>
+                            <th>传统心跳</th>
+                            <th>租约 (Leases)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>方式</td>
+                            <td>更新 Node 对象状态</td>
+                            <td>专用的 Lease 对象</td>
+                        </tr>
+                        <tr>
+                            <td>性能</td>
+                            <td>较慢（需要更新整个对象）</td>
+                            <td>更快（只更新 lease 时间）</td>
+                        </tr>
+                        <tr>
+                            <td>资源开销</td>
+                            <td>较大</td>
+                            <td>小</td>
+                        </tr>
+                        <tr>
+                            <td>推荐程度</td>
+                            <td>已弃用</td>
+                            <td>推荐使用</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- 自愈能力 -->
+            <section class="concept-section">
+                <h2>Kubernetes 自愈能力</h2>
+                <p>Kubernetes 具有强大的自愈能力，能够在节点或 Pod 故障时自动恢复。自愈能力通过多个层次的控制器和监控机制实现。</p>
+
+                <div class="flow-diagram">
+                    <div class="flow-step">故障发生</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">检测到失败（心跳超时/健康检查失败）</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">控制器识别状态差异</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">执行恢复操作</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">系统恢复健康状态</div>
+                </div>
+
+                <h3>自愈场景</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>故障类型</th>
+                            <th>检测机制</th>
+                            <th>恢复方式</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>节点故障</strong></td>
+                            <td>心跳超时，Node Controller</td>
+                            <td>将标记为 NotReady，重新调度 Pod</td>
+                        </tr>
+                        <tr>
+                            <td><strong>容器崩溃</strong></td>
+                            <td>Kubelet 健康检查</td>
+                            <td>根据重启策略重启容器</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Pod 被删除</strong></td>
+                            <td>ReplicaSet/Deployment</td>
+                            <td>创建新的 Pod 副本</td>
+                        </tr>
+                        <tr>
+                            <td><strong>应用未通过健康检查</strong></td>
+                            <td>Liveness Probe</td>
+                            <td>重启容器</td>
+                        </tr>
+                        <tr>
+                            <td><strong>应用未就绪</strong></td>
+                            <td>Readiness Probe</td>
+                            <td>从 Service 中移除，等待就绪</td>
+                        </tr>
+                        <tr>
+                            <td><strong>控制平面组件故障</strong></td>
+                            <td>健康检查</td>
+                            <td>自动重启（如果正确配置）</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="success">
+                    <strong>自愈的关键设计：</strong>
+                    <ul>
+                        <li><strong>声明式 API</strong>：只需要声明期望状态，系统自动维护实际状态</li>
+                        <li><strong>持续监控</strong>：控制器持续 Watch 资源变化</li>
+                        <li><strong>自动重试</strong>：失败的操作会自动重试</li>
+                        <li><strong>故障隔离</strong>：故障不会传播到整个集群</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- 垃圾回收 -->
+            <section class="concept-section">
+                <h2>垃圾回收</h2>
+                <p>垃圾回收是指 Kubernetes 自动清理不再使用的资源，以防止资源泄漏和浪费。</p>
+
+                <h3>垃圾回收类型</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>类型</th>
+                            <th>回收内容</th>
+                            <th>触发条件</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>容器垃圾回收</strong></td>
+                            <td>已停止的容器</td>
+                            <td>超过存活时间或达到数量限制</td>
+                        </tr>
+                        <tr>
+                            <td><strong>镜像垃圾回收</strong></td>
+                            <td>未被使用的镜像</td>
+                            <td>磁盘空间不足或达到阈值</td>
+                        </tr>
+                        <tr>
+                            <td><strong>对象垃圾回收</strong></td>
+                            <td>被删除对象的依赖</td>
+                            <td>所有者对象被删除</td>
+                        </tr>
+                        <tr>
+                            <td><strong>已完成的 Job</strong></td>
+                            <td>已完成的 Pod</td>
+                            <td>Job 完成且超过保留时间</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>删除策略</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>类型</th>
+                            <th>说明</th>
+                            <th>示例</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Foreground</strong></td>
+                            <td>先删除依赖对象，再删除所有者</td>
+                            <td>Deleting Pod → 删除 Pod → 删除 Deployment</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Background</strong></td>
+                            <td>立即删除所有者，后台删除依赖</td>
+                            <td>删除 Deployment → 立即删除 → 后台删除所有 Pod</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Orphan</strong></td>
+                            <td>只删除所有者，保留依赖对象</td>
+                            <td>删除 Deployment → 只删除 Deployment → 保留 Pod</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>所有者和依赖者</h3>
+                <p>在 Kubernetes 中，对象可以建立<strong>所有者-依赖者</strong>关系（也称为父子关系）。</p>
+
+                <pre><code># Pod 引用 Deployment 作为所有者
+metadata:
+  ownerReferences:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: nginx-deployment
+    uid: 7d9c1a2b-3e4f-5g6h-7i8j-9k0l1m2n3o4p
+    controller: true
+    blockOwnerDeletion: true</code></pre>
+
+                <div class="info">
+                    <strong>字段说明：</strong>
+                    <ul>
+                        <li><code>controller: true</code>：表示此对象是控制器的从属对象</li>
+                        <li><code>blockOwnerDeletion: true</code>：禁止删除所有者对象（当依赖对象还存在时）</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- 架构总结 -->
+            <section class="concept-section">
+                <h2>完整架构关系图</h2>
+                <div class="relation-diagram">
+                    <div style="display: flex; flex-direction: column; gap: 1rem; align-items: center;">
+                        <div class="diagram-box control-plane" style="width: 100%; text-align: center;">控制平面 (Control Plane)</div>
+
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                            <div class="diagram-box object">API Server</div>
+                            <div class="diagram-box object">etcd</div>
+                            <div class="diagram-box object">Scheduler</div>
+                            <div class="diagram-box object">Controller Manager</div>
+                            <div class="diagram-box object">Cloud Controller</div>
+                        </div>
+
+                        <div class="diagram-arrow">↓ 管理/协调 ↓</div>
+
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; width: 100%;">
+                            <div class="diagram-box worker-node">
+                                <div style="text-align: center;">工作节点 1</div>
+                                <div style="margin-top: 0.5rem; font-size: 0.8rem; text-align: left;">
+                                    • Kubelet<br>
+                                    • Kube-proxy<br>
+                                    • Container Runtime
+                                </div>
+                            </div>
+                            <div class="diagram-box worker-node">
+                                <div style="text-align: center;">工作节点 2</div>
+                                <div style="margin-top: 0.5rem; font-size: 0.8rem; text-align: left;">
+                                    • Kubelet<br>
+                                    • Kube-proxy<br>
+                                    • Container Runtime
+                                </div>
+                            </div>
+                            <div class="diagram-box worker-node">
+                                <div style="text-align: center;">工作节点 3</div>
+                                <div style="margin-top: 0.5rem; font-size: 0.8rem; text-align: left;">
+                                    • Kubelet<br>
+                                    • Kube-proxy<br>
+                                    • Container Runtime
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="diagram-arrow">↓ 运行 ↓</div>
+
+                        <div style="display: flex; gap: 1rem; justify-content: center;">
+                            <div class="diagram-box object">Pod 1</div>
+                            <div class="diagram-box object">Pod 2</div>
+                            <div class="diagram-box object">Pod 3</div>
+                            <div class="diagram-box object">Pod 4</div>
+                            <div class="diagram-box object">Pod 5</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 章节总结 -->
+            <section class="concept-section">
+                <h2>本章总结</h2>
+                <div class="success">
+                    <strong>关键要点：</strong>
+                    <ul>
+                        <li>Kubernetes 集群由控制平面和工作节点组成，通过 API Server 协调工作</li>
+                        <li>控制平面包含 API Server、etcd、Scheduler、Controller Manager 和 Cloud Controller Manager</li>
+                        <li>工作节点包含 Kubelet、Kube-proxy 和容器运行时</li>
+                        <li>API Server 是整个系统的统一入口，所有通信都通过它进行</li>
+                        <li>etcd 存储集群的所有状态数据，是单一事实来源</li>
+                        <li>Scheduler 负责 Pod 调度，Controller Manager 通过控制器确保期望状态与实际状态一致</li>
+                        <li>Kubelet 管理节点上的容器，Kube-proxy 实现服务负载均衡</li>
+                        <li>Kubernetes 具有强大的自愈能力，会自动恢复故障</li>
+                        <li>垃圾回收机制确保资源不会泄漏</li>
+                    </ul>
+                </div>
+
+                <div style="text-align: center; margin-top: 2rem;">
+                    <a href="containers.html" class="btn">继续学习：容器 →</a>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Kubernetes 核心概念学习指南 | 基于 <a href="https://kubernetes.io/docs/concepts/" target="_blank">Kubernetes 官方文档</a>整理</p>
+        </div>
+    </footer>
+</body>
+</html>

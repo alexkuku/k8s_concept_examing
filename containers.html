@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>容器 - Kubernetes 核心概念</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🐳 容器</h1>
+            <p class="subtitle">理解 Kubernetes 中的容器运行和生命周期</p>
+        </div>
+    </header>
+
+    <nav class="main-nav">
+        <div class="container">
+            <ul>
+                <li><a href="index.html">首页</a></li>
+                <li><a href="overview.html">概述</a></li>
+                <li><a href="architecture.html">集群架构</a></li>
+                <li><a href="containers.html" class="active">容器</a></li>
+                <li><a href="workloads.html">工作负载</a></li>
+                <li><a href="networking.html">网络</a></li>
+                <li><a href="storage.html">存储</a></li>
+                <li><a href="configuration.html">配置</a></li>
+                <li><a href="scheduling.html">调度</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main>
+        <div class="container">
+
+            <!-- 容器概述 -->
+            <section class="concept-section">
+                <h2>容器概述</h2>
+                <p>容器是一种轻量级、独立、可执行的软件包，包含了运行应用程序所需的所有内容：代码、运行时、系统工具、系统库和设置。</p>
+
+                <div class="info">
+                    <strong>Kubernetes 中的容器：</strong>
+                    <ul>
+                        <li>容器是 Kubernetes 中最小的可部署单元</li>
+                        <li>容器通常运行在 Pod 中，一个 Pod 可以包含一个或多个容器</li>
+                        <li>Kubernetes 通过容器运行时接口（CRI）与容器运行时交互</li>
+                        <li>支持多种容器运行时实现（containerd、CRI-O、Docker 等）</li>
+                    </ul>
+                </div>
+
+                <h3>容器 vs 虚拟机</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>特性</th>
+                            <th>容器</th>
+                            <th>虚拟机</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>抽象级别</strong></td>
+                            <td>应用级</td>
+                            <td>操作系统级</td>
+                        </tr>
+                        <tr>
+                            <td><strong>资源开销</strong></td>
+                            <td>小（共享主机内核）</td>
+                            <td>大（独立操作系统）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>启动速度</strong></td>
+                            <td>快（秒级）</td>
+                            <td>慢（分钟级）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>隔离性</strong></td>
+                            <td>进程级</td>
+                            <td>硬件级</td>
+                        </tr>
+                        <tr>
+                            <td><strong>便携性</strong></td>
+                            <td>高（镜像标准化）</td>
+                            <td>中（需要匹配虚拟化平台）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>密度</strong></td>
+                            <td>高（可运行数百个容器）</td>
+                            <td>低（通常运行几个虚拟机）</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- 容器镜像 -->
+            <section class="concept-section">
+                <h2>容器镜像</h2>
+                <p>容器镜像是容器的只读模板，包含了运行容器所需的所有文件和配置。当你运行一个容器时，Kubernetes 会使用指定的容器镜像来创建容器实例。</p>
+
+                <h3>镜像格式</h3>
+                <ul>
+                    <li><strong>Docker 镜像</strong>：最常用的镜像格式，使用 OCI 规范</li>
+                    <li><strong>OCI 镜像</strong>：开放容器倡议的标准镜像格式</li>
+                    <li><strong>Appc 镜像</strong>：较早的格式，支持有限</li>
+                </ul>
+
+                <h3>镜像拉取策略</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>策略</th>
+                            <th>值</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Always</strong></td>
+                            <td><code>imagePullPolicy: Always</code></td>
+                            <td>总是拉取最新的镜像</td>
+                        </tr>
+                        <tr>
+                            <td><strong>IfNotPresent</strong></td>
+                            <td><code>imagePullPolicy: IfNotPresent</code></td>
+                            <td>本地存在则使用，否则拉取（默认）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Never</strong></td>
+                            <td><code>imagePullPolicy: Never</code></td>
+                            <td>只使用本地镜像，从不拉取</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>私有镜像仓库认证</h3>
+                <pre><code># 创建 Docker Registry Secret
+kubectl create secret docker-registry regcred \
+  --docker-server=&lt;your-registry-server&gt; \
+  --docker-username=&lt;your-name&gt; \
+  --docker-password=&lt;your-pword&gt; \
+  --docker-email=&lt;your-email&gt;
+
+# 在 Pod 中引用
+spec:
+  containers:
+  - name: app
+    image: myregistry.example.com/myapp:1.0
+  imagePullSecrets:
+  - name: regcred</code></pre>
+
+                <h3>镜像命名规范</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>格式</th>
+                            <th>示例</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>tag:latest</td>
+                            <td><code>nginx:latest</code></td>
+                            <td>最新版本标签</td>
+                        </tr>
+                        <tr>
+                            <td>特定版本</td>
+                            <td><code>nginx:1.21.6</code></td>
+                            <td>指定具体版本</td>
+                        </tr>
+                        <tr>
+                            <td>摘要</td>
+                            <td><code>nginx@sha256:abc123...</code></td>
+                            <td>使用 Content Addressable Storage (CAS)</td>
+                        </tr>
+                        <tr>
+                            <td>私有仓库</td>
+                            <td><code>registry.example.com/nginx:1.0</code></td>
+                            <td>指定仓库地址</td>
+                        </tr>
+                        <tr>
+                            <td>命名空间</td>
+                            <td><code>my-org/nginx:1.0</code></td>
+                            <td>Docker Hub 命名空间</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="warning">
+                    <strong>最佳实践：</strong>生产环境中应避免使用 <code>:latest</code>标签，因为它会导致不可预测的行为。应使用具体的版本标签或镜像摘要。
+                </div>
+            </section>
+
+            <!-- 容器环境 -->
+            <section class="concept-section">
+                <h2>容器环境</h2>
+                <p>Kubernetes 为容器提供了一个丰富的运行环境，包括环境变量、挂载卷、资源限制等配置。</p>
+
+                <h3>注入的环境变量</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>环境变量</th>
+                            <th>示例</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>KUBERNETES_SERVICE_HOST</strong></td>
+                            <td><code>10.96.0.1</code></td>
+                            <td>Kubernetes API Server 的主机地址</td>
+                        </tr>
+                        <tr>
+                            <td><strong>KUBERNETES_SERVICE_PORT</strong></td>
+                            <td><code>443</code></td>
+                            <td>Kubernetes API Server 的端口号</td>
+                        </tr>
+                        <tr>
+                            <td><strong>POD_NAME</strong></td>
+                            <td><code>nginx-deployment-abc123</code></td>
+                            <td>当前 Pod 的名称</td>
+                        </tr>
+                        <tr>
+                            <td><strong>POD_NAMESPACE</strong></td>
+                            <td><code>default</code></td>
+                            <td>当前 Pod 的命名空间</td>
+                        </tr>
+                        <tr>
+                            <td><strong>POD_IP</strong></td>
+                            <td><code>10.244.1.5</code></td>
+                            <td>当前 Pod 的 IP 地址</td>
+                        </tr>
+                        <tr>
+                            <td><strong>NODE_NAME</strong></td>
+                            <td><code>node-1</code></td>
+                            <td>运行当前 Pod 的节点名称</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>环境变量配置方式</h3>
+                <pre><code># 直接设置值
+env:
+  - name: DATABASE_URL
+    value: "postgres://db:5432/mydb"
+
+# 从 ConfigMap 引入
+envFrom:
+  - configMapRef:
+      name: app-config
+
+# 从 Secret 引入
+env:
+  - name: DB_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: db-secret
+        key: password
+
+# 使用 Downward API
+env:
+  - name: MY_POD_IP
+    valueFrom:
+      fieldRef:
+        fieldPath: status.podIP</code></pre>
+
+                <h3>容器文件系统</h3>
+                <ul>
+                    <li><strong>只读根文件系统</strong>：可以提高安全性</li>
+                    <li><strong>挂载卷</strong>：通过 volumeMounts 挂载到容器内部</li>
+                    <li><strong>临时文件系统</strong>：使用 emptyDir 类型卷</li>
+                    <li><strong>共享存储</strong>：多个容器可以共享同一个卷</li>
+                </ul>
+            </section>
+
+            <!-- 运行时类 -->
+            <section class="concept-section">
+                <h2>运行时类 (RuntimeClass)</h2>
+                <p>RuntimeClass 是 Kubernetes 中用于定义不同容器运行时配置的资源。它允许你在集群中使用多种容器运行时，而无需修改 Pod 定义。</p>
+
+                <h3>RuntimeClass 的用途</h3>
+                <ul>
+                    <li><strong>多运行时支持</strong>：同时使用 containerd、gVisor、Kata Containers 等</li>
+                    <li><strong>配置隔离</strong>：为不同工作负载提供不同的运行时配置</li>
+                    <li><strong>安全要求</strong>：为敏感应用使用强隔离的运行时</li>
+                    <li><strong>性能优化</strong>：为高性能应用使用轻量级运行时</li>
+                </ul>
+
+                <h3>RuntimeClass 定义示例</h3>
+                <pre><code># RuntimeClass 定义
+apiVersion: node.k8s.io/v1
+kind: RuntimeClass
+metadata:
+  name: gvisor
+handler: runsc
+overhead:
+  podFixed:
+    memory: "100Mi"
+    cpu: "100m"
+
+# Pod 使用 RuntimeClass
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mypod
+spec:
+  runtimeClassName: gvisor
+  containers:
+  - name: mycontainer
+    image: nginx</code></pre>
+
+                <h3>常见运行时</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>运行时</th>
+                            <th>Handler 名称</th>
+                            <th>特点</th>
+                            <th>适用场景</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>runc</strong></td>
+                            <td><code>runc</code></td>
+                            <td>标准运行时，Docker 默认</td>
+                            <td>通用容器应用</td>
+                        </tr>
+                        <tr>
+                            <td><strong>gVisor</strong></td>
+                            <td><code>runsc</code></td>
+                            <td>用户空间内核，提供沙箱</td>
+                            <td>不可信应用、多租户</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Kata Containers</strong></td>
+                            <td><code>kata-qemu</code></td>
+                            <td>基于虚拟机的隔离</td>
+                            <td>高安全要求、PCI-DSS 合规</td>
+                        </tr>
+                        <tr>
+                            <td><strong>crun</strong></td>
+                            <td><code>crun</code></td>
+                            <td>轻量级、C 实现</td>
+                            <td>资源受限环境</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- 容器生命周期 -->
+            <section class="concept-section">
+                <h2>容器生命周期</h2>
+                <p>了解容器的生命周期对于管理应用非常重要。Kubernetes 管理容器的整个生命周期，从创建到删除。</p>
+
+                <h3>容器状态</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>状态</th>
+                            <th>说明</th>
+                            <th>常见原因</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Waiting</strong></td>
+                            <td>容器正在启动或等待条件</td>
+                            <td>镜像拉取中、启动命令执行中</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Running</strong></td>
+                            <td>容器正在运行</td>
+                            <td>容器启动成功，主进程在运行</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Terminated</strong></td>
+                            <td>容器已停止</td>
+                            <td>正常退出、被杀掉、OOM</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>容器退出原因</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>原因</th>
+                            <th>说明</th>
+                            <th>退出码</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Completed</strong></td>
+                            <td>容器正常退出</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Error</strong></td>
+                            <td>容器因错误退出</td>
+                            <td>非 0</td>
+                        </tr>
+                        <tr>
+                            <td><strong>OOMKilled</strong></td>
+                            <td>被 OOM Killer 杀掉</td>
+                            <td>137</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ContainerCannotRun</strong></td>
+                            <td>容器运行时错误</td>
+                            <td>125-127</td>
+                        </tr>
+                        <tr>
+                            <td><strong>StartError</strong></td>
+                            <td>容器启动错误</td>
+                            <td>128</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>重启策略</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>策略</th>
+                            <th>说明</th>
+                            <th>适用场景</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Always</strong></td>
+                            <td>总是重启容器</td>
+                            <td>长期运行的服务</td>
+                        </tr>
+                        <tr>
+                            <td><strong>OnFailure</strong></td>
+                            <td>仅在失败时重启</td>
+                            <td>可能正常退出的任务</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Never</strong></td>
+                            <td>从不重启</td>
+                            <td>批处理作业、Job</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="info">
+                    <strong>注意：</strong>重启策略应用于 Pod 内的所有容器。如果一个 Pod 包含多个容器，所有容器的重启策略必须一致。
+                </div>
+            </section>
+
+            <!-- 容器生命周期钩子 -->
+            <section class="concept-section">
+                <h2>容器生命周期钩子 <span class="badge badge-primary">重要</span></h2>
+                <p>容器生命周期钩子允许你在容器生命周期的特定时刻执行操作。Kubernetes 提供了两种钩子：</p>
+
+                <h3>钩子类型</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>钩子</th>
+                            <th>触发时机</th>
+                            <th>用途</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>PostStart</strong></td>
+                            <td>容器启动后立即触发</td>
+                            <td>预热、初始化配置、注册服务</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PreStop</strong></td>
+                            <td>容器终止前触发</td>
+                            <td>优雅停机、清理资源、注销服务</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>钩子执行方式</h3>
+                <pre><code># 使用 exec 执行命令
+lifecycle:
+  postStart:
+    exec:
+      command:
+      - /bin/sh
+      - -c
+      - echo "Container started" > /tmp/start.log
+
+# 使用 HTTP 请求
+lifecycle:
+  preStop:
+    httpGet:
+      path: /shutdown
+      port: 8080
+      host: localhost
+
+# 使用 TCP 套接字
+lifecycle:
+  preStop:
+    tcpSocket:
+      port: 8080
+      host: localhost</code></pre>
+
+                <h3>钩子特性</h3>
+                <div class="note">
+                    <strong>重要特性：</strong>
+                    <ul>
+                        <li><strong>同步执行</strong>：钩子同步执行且必须完成才能继续容器生命周期</li>
+                        <li><strong>超时限制</strong>：默认超时时间 1 秒，可通过 <code>terminationGracePeriodSeconds</code> 配置</li>
+                        <li><strong>失败处理</strong>：钩子失败导致容器终止（PreStop 会阻止容器被删除）</li>
+                        <li><strong>日志记录</strong>：钩子输出会记录在容器日志中</li>
+                        <li><strong>幂等性</strong>：钩子可能被多次调用，应确保操作是幂等的</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- 探针 -->
+            <section class="concept-section">
+                <h2>探针 <span class="badge badge-primary">核心概念</span></h2>
+                <p>探针是 Kubernetes 用于检测容器状态的机制。通过探针，Kubernetes 可以知道容器是否健康、是否准备好接收流量。</p>
+
+                <h3>探针类型</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>探针</th>
+                            <th>用途</th>
+                            <th>失败后果</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Liveness Probe</strong></td>
+                            <td>检测容器是否活着</td>
+                            <td>重启容器</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Readiness Probe</strong></td>
+                            <td>检测容器是否准备好接收流量</td>
+                            <td>从 Service 移除</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Startup Probe</strong></td>
+                            <td>检测容器是否已经启动</td>
+                            <td>禁用存活和就绪探针</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>探针执行方式</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>方式</th>
+                            <th>说明</th>
+                            <th>示例</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>ExecAction</strong></td>
+                            <td>在容器内执行命令</td>
+                            <td><code>exec: command: [cat, /tmp/healthy]</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>HTTPGetAction</strong></td>
+                            <td>发送 HTTP GET 请求</td>
+                            <td><code>httpGet: path: /healthz, port: 8080</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>TCPSocketAction</strong></td>
+                            <td>尝试建立 TCP 连接</td>
+                            <td><code>tcpSocket: port: 8080</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>gRPC</strong></td>
+                            <td>发送 gRPC 请求（K8s 1.24+）</td>
+                            <td><code>grpc: port: 9000, service: healthcheck</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>探针配置示例</h3>
+                <pre><code># HTTP 探针示例
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: 8080
+    httpHeaders:
+    - name: Custom-Header
+      value: Awesome
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 1
+  successThreshold: 1
+  failureThreshold: 3
+
+# 命令探针示例
+readinessProbe:
+  exec:
+    command:
+    - cat
+    - /tmp/ready
+  initialDelaySeconds: 5
+  periodSeconds: 10
+
+# 启动探针示例（慢启动应用）
+startupProbe:
+  httpGet:
+    path: /startup
+    port: 8080
+  failureThreshold: 30  # 最多允许失败 30 次
+  periodSeconds: 5       # 每 5 秒检查一次
+  # 总共允许 150 秒启动</code></pre>
+
+                <h3>探针参数说明</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>参数</th>
+                            <th>默认值</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>initialDelaySeconds</strong></td>
+                            <td>0</td>
+                            <td>容器启动后等待多久开始第一次探测</td>
+                        </tr>
+                        <tr>
+                            <td><strong>periodSeconds</strong></td>
+                            <td>10</td>
+                            <td>执行探测的间隔时间</td>
+                        </tr>
+                        <tr>
+                            <td><strong>timeoutSeconds</strong></td>
+                            <td>1</td>
+                            <td>探测的超时时间</td>
+                        </tr>
+                        <tr>
+                            <td><strong>successThreshold</strong></td>
+                            <td>1</td>
+                            <td>探测成功的最小连续次数</td>
+                        </tr>
+                        <tr>
+                            <td><strong>failureThreshold</strong></td>
+                            <td>3</td>
+                            <td>探测失败的最小连续次数才视为失败</td>
+                        </tr>
+                        <tr>
+                            <td><strong>terminationGracePeriodSeconds</strong></td>
+                            <td>30</td>
+                            <td>容器终止时的宽限期</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="success">
+                    <strong>探针使用场景：</strong>
+                    <ul>
+                        <li><strong>Liveness Probe</strong>：检测应用是否崩溃或死锁，重启容器恢复服务</li>
+                        <li><strong>Readiness Probe</strong>：应用启动时间较长或依赖其他服务时使用</li>
+                        <li><strong>Startup Probe</strong>：应用启动时间很长（加载大量数据）时保护存活和就绪探针</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- 容器运行时接口 -->
+            <section class="concept-section">
+                <h2>容器运行时接口 (CRI)</h2>
+                <p>容器运行时接口（Container Runtime Interface，CRI）是 Kubernetes 中的一组插件接口，用于集成第三方容器运行时。</p>
+
+                <h3>CRI 架构</h3>
+                <div class="relation-diagram">
+                    <div class="diagram-container" style="flex-direction: column; align-items: center;">
+                        <div class="diagram-box object">Kubelet</div>
+                        <div class="diagram-arrow">⬆︎ 通过 gRPC CRI API ⬆︎</div>
+                        <div class="diagram-box object">CRI Shim (dockershim 已弃用)</div>
+                        <div class="diagram-arrow">⬆︎ 调用 ⬆︎</div>
+                        <div style="display: flex; gap: 1rem;">
+                            <div class="diagram-box object">containerd</div>
+                            <div class="diagram-box object">CRI-O</div>
+                            <div class="diagram-box object">其他 CRI 实现</div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>CRI 主要功能</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>接口组</th>
+                            <th>功能</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>RuntimeService</strong></td>
+                            <td>Pod/容器生命周期管理、状态查询、Exec/Attach/PortForward</td>
+                    </tr>
+                        <tr>
+                            <td><strong>ImageService</strong></td>
+                            <td>镜像拉取、列出、删除、状态查询</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>CRI 历史变迁</h3>
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th>阶段</th>
+                            <th>变化</th>
+                            <th>影响</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>v1.24 之前</strong></td>
+                            <td>使用 dockershim（内置 Docker 集成）</td>
+                            <td>Docker 是最常用运行时</td>
+                        </tr>
+                        <tr>
+                            <td><strong>v1.24</strong></td>
+                            <td>移除 dockershim</td>
+                            <td>需要使用 CRI-compliant 运行时或 cri-dockerd</td>
+                        </tr>
+                        <tr>
+                            <td><strong>v1.25+</strong></td>
+                            <td>完全基于 CRI 规范</td>
+                            <td>containerd、CRI-O 成为主流</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- 章节总结 -->
+            <section class="concept-section">
+                <h2>本章总结</h2>
+                <div class="success">
+                    <strong>关键要点：</strong>
+                    <ul>
+                        <li>容器是 Kubernetes 中最小部署单元，轻量、高效、可移植</li>
+                        <li>容器镜像是只读模板，支持多种拉取策略和私有仓库认证</li>
+                        <li>Kubernetes 为容器提供丰富的环境变量和配置选项</li>
+                        <li>RuntimeClass 允许集群使用多种容器运行时</li>
+                        <li>容器生命周期包括 Waiting、Running、Terminated 三种状态</li>
+                        <li>生命周期钩子（PostStart/PreStop）允许在特定时刻执行操作</li>
+                        <li>探针（Liveness/Readiness/Startup）是健康检查的核心机制</li>
+                        <li>CRI 是 Kubernetes 与容器运行时之间的标准接口</li>
+                    </ul>
+                </div>
+
+                <div style="text-align: center; margin-top: 2rem;">
+                    <a href="workloads.html" class="btn">继续学习：工作负载 →</a>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Kubernetes 核心概念学习指南 | 基于 <a href="https://kubernetes.io/docs/concepts/" target="_blank">Kubernetes 官方文档</a>整理</p>
+        </div>
+    </footer>
+</body>
+</html>
