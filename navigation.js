@@ -49,14 +49,6 @@
         `;
 
         container.innerHTML = navHTML;
-
-        // 在移动端设置初始 max-height
-        if (window.innerWidth <= 768) {
-            const navList = document.getElementById('nav-list');
-            if (navList) {
-                navList.style.maxHeight = '0';
-            }
-        }
     }
 
     // 设置当前页面
@@ -83,46 +75,29 @@
     function setupMobileMenu() {
         const menuBtn = document.getElementById('nav-menu-btn');
         const navList = document.getElementById('nav-list');
+        const nav = document.getElementById('main-nav');
 
-        if (!menuBtn || !navList) return;
+        if (!menuBtn || !navList || !nav) return;
 
         menuBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            const isOpen = navList.classList.contains('active');
-
-            if (isOpen) {
-                // 关闭菜单
-                navList.classList.remove('active');
-                menuBtn.classList.remove('active');
-                navList.style.maxHeight = '0';
-            } else {
-                // 打开菜单
-                navList.classList.add('active');
-                menuBtn.classList.add('active');
-
-                // 等待下一帧再设置高度，确保动画流畅
-                requestAnimationFrame(() => {
-                    const height = navList.scrollHeight;
-                    navList.style.maxHeight = height + 'px';
-                });
-            }
+            navList.classList.toggle('active');
+            menuBtn.classList.toggle('active');
         });
 
         // 点击链接后关闭菜单
         navList.querySelectorAll('a').forEach(link => {
             link.addEventListener('click', function() {
-                menuBtn.classList.remove('active');
                 navList.classList.remove('active');
-                navList.style.maxHeight = '0';
+                menuBtn.classList.remove('active');
             });
         });
 
         // 点击外部区域关闭菜单
         document.addEventListener('click', function(e) {
-            if (!document.getElementById('main-nav').contains(e.target)) {
-                menuBtn.classList.remove('active');
+            if (!nav.contains(e.target)) {
                 navList.classList.remove('active');
-                navList.style.maxHeight = '0';
+                menuBtn.classList.remove('active');
             }
         });
 
@@ -131,12 +106,6 @@
             if (window.innerWidth > 768) {
                 navList.classList.remove('active');
                 menuBtn.classList.remove('active');
-                navList.style.maxHeight = '';
-            } else {
-                // 切换到移动端时，设置初始 max-height
-                if (!navList.classList.contains('active')) {
-                    navList.style.maxHeight = '0';
-                }
             }
         });
     }
