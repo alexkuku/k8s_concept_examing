@@ -11,7 +11,7 @@
         { href: 'configuration.html', text: '配置' },
         { href: 'scheduling.html', text: '调度' },
         { href: 'cluster-admin.html', text: '集群管理' },
-        { href: 'exam/index.html', text: '📝 知识测评', isExam: true }
+        { href: '../exam/index.html', text: '📝 知识测评', isExam: true }
     ];
 
     // 生成导航 HTML

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes 核心概念学习指南</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="navigation.js"></script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🚀 Kubernetes 核心概念学习指南</h1>
+            <p class="subtitle">全面掌握 Kubernetes 的核心概念和架构</p>
+        </div>
+    </header>
+
+    <div id="navigation-container"></div>
+
+    <main>
+        <div class="container">
+            <div class="learning-path">
+                <h2>📚 学习路径</h2>
+                <p>Kubernetes 是一个开源的容器编排平台，用于自动化部署、扩展和管理容器化应用程序。以下是推荐的学习顺序：</p>
+
+                <div class="path-diagram">
+                    <div class="path-item active">
+                        <span class="step">1</span>
+                        <h3>概述</h3>
+                        <p>了解 Kubernetes 的基本概念和架构</p>
+                        <a href="overview.html" class="btn">开始学习 →</a>
+                    </div>
+
+                    <div class="arrow">↓</div>
+
+                    <div class="path-item">
+                        <span class="step">2</span>
+                        <h3>集群架构</h3>
+                        <p>深入理解控制平面和节点组件</p>
+                        <a href="architecture.html" class="btn">继续学习 →</a>
+                    </div>
+
+                    <div class="arrow">↓</div>
+
+                    <div class="path-item">
+                        <span class="step">3</span>
+                        <h3>容器</h3>
+                        <p>学习容器运行和生命周期管理</p>
+                        <a href="containers.html" class="btn">继续学习 →</a>
+                    </div>
+
+                    <div class="arrow">↓</div>
+
+                    <div class="path-item">
+                        <span class="step">4</span>
+                        <h3>工作负载</h3>
+                        <p>掌握 Pod 和工作负载控制器</p>
+                        <a href="workloads.html" class="btn">继续学习 →</a>
+                    </div>
+
+                    <div class="arrow">↓</div>
+
+                    <div class="path-item">
+                        <span class="step">5</span>
+                        <h3>网络</h3>
+                        <p>理解服务发现和网络策略</p>
+                        <a href="networking.html" class="btn">继续学习 →</a>
+                    </div>
+
+                    <div class="arrow">↓</div>
+
+                    <div class="path-item">
+                        <span class="step">6</span>
+                        <h3>存储</h3>
+                        <p>学习持久化存储和卷管理</p>
+                        <a href="storage.html" class="btn">继续学习 →</a>
+                    </div>
+
+                    <div class="arrow">↓</div>
+
+                    <div class="path-item">
+                        <span class="step">7</span>
+                        <h3>配置</h3>
+                        <p>管理应用配置和机密信息</p>
+                        <a href="configuration.html" class="btn">继续学习 →</a>
+                    </div>
+
+                    <div class="arrow">↓</div>
+
+                    <div class="path-item">
+                        <span class="step">8</span>
+                        <h3>调度</h3>
+                        <p>理解 Pod 调度和资源分配</p>
+                        <a href="scheduling.html" class="btn">继续学习 →</a>
+                    </div>
+
+                    <div class="arrow">↓</div>
+
+                    <div class="path-item">
+                        <span class="step">9</span>
+                        <h3>集群管理</h3>
+                        <p>掌握集群运维和监控</p>
+                        <a href="cluster-admin.html" class="btn">继续学习 →</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quick-reference">
+                <h2>🔍 快速参考</h2>
+
+                <div class="concept-grid">
+                    <div class="concept-card" onclick="window.location.href='overview.html'">
+                        <div class="icon">📦</div>
+                        <h3>核心对象</h3>
+                        <p>Pod、Service、ConfigMap、Secret 等</p>
+                    </div>
+
+                    <div class="concept-card" onclick="window.location.href='workloads.html'">
+                        <div class="icon">🔄</div>
+                        <h3>工作负载</h3>
+                        <p>Deployment、StatefulSet、DaemonSet、Job</p>
+                    </div>
+
+                    <div class="concept-card" onclick="window.location.href='networking.html'">
+                        <div class="icon">🌐</div>
+                        <h3>网络</h3>
+                        <p>Service、Ingress、Network Policy</p>
+                    </div>
+
+                    <div class="concept-card" onclick="window.location.href='storage.html'">
+                        <div class="icon">💾</div>
+                        <h3>存储</h3>
+                        <p>PV、PVC、StorageClass、Volume</p>
+                    </div>
+
+                    <div class="concept-card" onclick="window.location.href='configuration.html'">
+                        <div class="icon">⚙️</div>
+                        <h3>配置</h3>
+                        <p>ConfigMap、Secret、Probe</p>
+                    </div>
+
+                    <div class="concept-card" onclick="window.location.href='scheduling.html'">
+                        <div class="icon">📊</div>
+                        <h3>调度</h3>
+                        <p>调度器、污点/容忍、优先级</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 知识测评入口 -->
+            <div class="tips">
+                <h2>📝 知识测评</h2>
+                <p>检验你对 Kubernetes 核心概念的掌握程度！</p>
+                <ul style="margin: 20px 0;">
+                    <li>🎯 <strong>全面覆盖</strong>：涵盖所有核心概念模块</li>
+                    <li>🔀 <strong>随机出题</strong>：每次测试题目都不同</li>
+                    <li>📊 <strong>实时反馈</strong>：答题后立即查看解析</li>
+                    <li>🎓 <strong>灵活配置</strong>：自由选择测试模块和题目数量</li>
+                </ul>
+                <div style="text-align: center;">
+                    <a href="../exam/index.html" class="btn btn-primary" style="background: #28a745;">开始测评 →</a>
+                </div>
+            </div>
+
+            <div class="tips">
+                <h2>💡 学习建议</h2>
+                <ul>
+                    <li><strong>循序渐进</strong>：按照学习路径的顺序进行学习，每个概念都建立在前一个概念的基础上</li>
+                    <li><strong>动手实践</strong>：在学习每个概念后，使用 kubectl 进行实际操作加深理解</li>
+                    <li><strong>绘制图表</strong>：尝试自己绘制架构图和关系图，帮助理解概念之间的关系</li>
+                    <li><strong>关注关键术语</strong>：Kubernetes 有很多专业术语，掌握这些术语对于深入学习非常重要</li>
+                    <li><strong>实践场景</strong>：思考每个概念在实际应用场景中的作用和用法</li>
+                    <li><strong>版本关注</strong>：注意 Kubernetes 不同版本之间的差异和新特性</li>
+                </ul>
+            </div>
+
+            <div class="glossary">
+                <h2>📖 核心术语速查</h2>
+                <table class="glossary-table">
+                    <thead>
+                        <tr>
+                            <th>术语</th>
+                            <th>中文</th>
+                            <th>简要说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Pod</td>
+                            <td>容器组</td>
+                            <td>Kubernetes 最小的可部署单元</td>
+                        </tr>
+                        <tr>
+                            <td>Node</td>
+                            <td>节点</td>
+                            <td>运行容器化应用程序的工作机器</td>
+                        </tr>
+                        <tr>
+                            <td>Cluster</td>
+                            <td>集群</td>
+                            <td>由一组节点组成的 Kubernetes 系统</td>
+                        </tr>
+                        <tr>
+                            <td>Control Plane</td>
+                            <td>控制平面</td>
+                            <td>管理集群状态的核心组件</td>
+                        </tr>
+                        <tr>
+                            <td>Service</td>
+                            <td>服务</td>
+                            <td>为一组 Pod 提供稳定的网络访问方式</td>
+                        </tr>
+                        <tr>
+                            <td>Deployment</td>
+                            <td>部署</td>
+                            <td>管理 Pod 副本和更新策略</td>
+                        </tr>
+                        <tr>
+                            <td>PV/PVC</td>
+                            <td>持久卷/持久卷声明</td>
+                            <td>存储资源的抽象和声明式管理</td>
+                        </tr>
+                        <tr>
+                            <td>kubectl</td>
+                            <td>kubectl</td>
+                            <td>Kubernetes 命令行工具</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="cheat-sheet">
+                <h2>🎯 kubectl 常用命令</h2>
+                <table class="cmd-table">
+                    <thead>
+                        <tr>
+                            <th>功能</th>
+                            <th>命令</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>查看节点</td>
+                            <td><code>kubectl get nodes</code></td>
+                            <td>列出集群中的所有节点</td>
+                        </tr>
+                        <tr>
+                            <td>查看 Pod</td>
+                            <td><code>kubectl get pods</code></td>
+                            <td>列出当前命名空间的所有 Pod</td>
+                        </tr>
+                        <tr>
+                            <td>查看服务</td>
+                            <td><code>kubectl get svc</code></td>
+                            <td>列出所有服务</td>
+                        </tr>
+                        <tr>
+                            <td>创建资源</td>
+                            <td><code>kubectl apply -f file.yaml</code></td>
+                            <td>从 YAML 文件创建或更新资源</td>
+                        </tr>
+                        <tr>
+                            <td>删除资源</td>
+                            <td><code>kubectl delete -f file.yaml</code></td>
+                            <td>删除 YAML 文件中定义的资源</td>
+                        </tr>
+                        <tr>
+                            <td>查看日志</td>
+                            <td><code>kubectl logs <pod-name></code></td>
+                            <td>查看 Pod 的日志</td>
+                        </tr>
+                        <tr>
+                            <td>进入容器</td>
+                            <td><code>kubectl exec -it <pod-name> -- /bin/bash</code></td>
+                            <td>进入 Pod 的容器中执行命令</td>
+                        </tr>
+                        <tr>
+                            <td>描述资源</td>
+                            <td><code>kubectl describe <resource> <name></code></td>
+                            <td>显示资源的详细状态</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Kubernetes 核心概念学习指南 | 基于 <a href="https://kubernetes.io/docs/concepts/" target="_blank">Kubernetes 官方文档</a>整理</p>
+        </div>
+    </footer>
+
+    <script>
+        // 学习进度追踪
+        const visitedPages = new Set();
+        const currentPath = window.location.pathname.split('/').pop();
+        if (!visitedPages.has(currentPath)) {
+            visitedPages.add(currentPath);
+            localStorage.setItem('k8s-learning-progress', JSON.stringify([...visitedPages]));
+        }
+
+        // 标记已访问的页面
+        const progress = JSON.parse(localStorage.getItem('k8s-learning-progress') || '[]');
+        const pathItems = document.querySelectorAll('.path-item');
+        const pageMap = {
+            'index.html': 0,
+            'overview.html': 0,
+            'architecture.html': 1,
+            'containers.html': 2,
+            'workloads.html': 3,
+            'networking.html': 4,
+            'storage.html': 5,
+            'configuration.html': 6,
+            'scheduling.html': 7,
+            'cluster-admin.html': 8
+        };
+
+        progress.forEach(page => {
+            const index = pageMap[page];
+            if (index !== undefined && pathItems[index]) {
+                pathItems[index].classList.add('visited');
+            }
+        });
+    </script>
+</body>
+</html>
