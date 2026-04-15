@@ -695,14 +695,14 @@ footer a {
         display: none !important;
         position: absolute;
         top: 100%;
-        left: -20px;
-        right: -20px;
+        left: 0;
+        right: 0;
         background: #fff;
         flex-direction: column !important;
         justify-content: flex-start !important;
         flex-wrap: nowrap !important;
         gap: 0 !important;
-        padding: 0 20px !important;
+        padding: 0 !important;
         max-height: 320px;
         overflow-y: auto;
         box-shadow: var(--shadow-lg);
@@ -712,6 +712,7 @@ footer a {
         transition: opacity 0.3s ease, transform 0.3s ease;
         scrollbar-width: thin;
         scrollbar-color: var(--primary-color) var(--light-color);
+        border-top: 3px solid var(--primary-color);
     }
 
     .main-nav .nav-list.active {
@@ -725,6 +726,7 @@ footer a {
         width: 100% !important;
         border-bottom: 1px solid var(--border-color);
         box-sizing: border-box;
+        position: relative;
     }
 
     .main-nav li:last-child {
@@ -732,26 +734,70 @@ footer a {
     }
 
     .main-nav a {
-        display: block !important;
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
         width: 100% !important;
-        padding: 1rem 1.5rem !important;
+        padding: 14px 20px !important;
         text-align: left !important;
         font-size: 1rem;
         border-radius: 0;
         box-sizing: border-box;
         -webkit-tap-highlight-color: transparent;
+        transition: background-color 0.2s ease, padding-left 0.2s ease;
     }
 
-    .main-nav a:hover,
+    /* 添加右侧箭头指示器 */
+    .main-nav a::after {
+        content: '›';
+        font-size: 1.4rem;
+        color: var(--border-color);
+        font-weight: 300;
+        transition: transform 0.2s ease, color 0.2s ease;
+    }
+
     .main-nav a.active {
         background-color: var(--primary-color);
         color: white;
+        padding-left: 28px !important;
     }
 
-    .nav-exam-link:hover,
+    .main-nav a.active::after {
+        color: white;
+        transform: translateX(4px);
+    }
+
+    .main-nav a:hover:not(.active) {
+        background-color: var(--light-color);
+        padding-left: 28px !important;
+        color: var(--primary-color);
+    }
+
+    .main-nav a:hover:not(.active)::after {
+        color: var(--primary-color);
+    }
+
+    .nav-exam-link {
+        position: relative;
+    }
+
     .nav-exam-link.active {
         background-color: #28a745 !important;
         color: white !important;
+    }
+
+    .nav-exam-link.active::after {
+        color: white;
+    }
+
+    /* 知识测评悬停时只改变文字颜色，不改变背景 */
+    .nav-exam-link:hover:not(.active) {
+        background-color: var(--light-color) !important;
+        color: #28a745 !important;
+    }
+
+    .nav-exam-link:hover:not(.active)::after {
+        color: #28a745;
     }
 
     /* 滚动条样式 */
@@ -766,6 +812,15 @@ footer a {
     .main-nav .nav-list::-webkit-scrollbar-thumb {
         background-color: var(--primary-color);
         border-radius: 3px;
+    }
+
+    /* 添加底部渐变阴影，提示可滚动 */
+    .main-nav .nav-list {
+        background: linear-gradient(white 30%, rgba(255, 255, 255, 0)),
+                    linear-gradient(white 30%, rgba(255, 255, 255, 0) 0) var(--light-color);
+        background-attachment: local, scroll;
+        background-size: 100% 40px, 100% 40px;
+        background-repeat: no-repeat;
     }
 
     .path-item {
