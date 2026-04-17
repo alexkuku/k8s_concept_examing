@@ -2323,15 +2323,15 @@ const questions = [
         "question": "Guaranteed、Burstable 和 BestEffort QoS 的区别是什么？",
         "type": "单选",
         "options": [
-            "没有区别",
-            "Guaranteed: requests == limits, Burstable: 定义了 requests, BestEffort: 未定义",
-            "Guaranteed: 仅 limits, Burstable: 仅 requests, BestEffort: 都没有",
-            "Guaranteed: 不限制, Burstable: 有限制, BestEffort: 严格限制"
+            "没有区别，只是名称不同",
+            "Guaranteed: requests == limits；Burstable: 设置了 requests，且至少一个容器 requests < limits；BestEffort: 未设置任何 requests 或 limits",
+            "Guaranteed: 仅设置 limits；Burstable: 仅设置 requests；BestEffort: requests 和 limits 都没有",
+            "Guaranteed: 不限制资源；Burstable: 限制资源；BestEffort: 严格限制资源"
         ],
         "answer": [
             1
         ],
-        "explanation": "三种 QoS 的区别：Guaranteed：为所有容器设置了 requests 和 limits，且 CPU 和内存的 requests 等于 limits；Burstable：定义了 requests 但 requests < limits；BestEffort：未定义任何 requests 或 limits。",
+        "explanation": "Kubernetes 中容器 QoS 分为三类：\n1) **Guaranteed**：为所有容器设置了 requests 和 limits，且 CPU 和内存的 requests 必须等于 limits（例如：requests: 500m, limits: 500m）。\n2) **Burstable**：至少设置了一个容器的 requests，且至少有一个容器的 requests < limits（例如：requests: 500m, limits: 1000m）。\n3) **BestEffort**：未设置任何 requests 或 limits，可以使用节点的所有空闲资源。\n\nQoS 影响 Pod 的调度和驱逐优先级：Guaranteed 优先级最高，其次是 Burstable，最后是 BestEffort。",
         "difficulty": "进阶"
     },
     {
