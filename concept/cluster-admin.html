@@ -109,13 +109,13 @@ kubectl taint nodes node1 key:NoSchedule-</code></pre>
                 <h3>升级步骤</h3>
                 <div class="flow-diagram">
                     <div class="flow-step">1. 升级第一个控制平面节点</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">2. 升级其他控制平面节点</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">3. 升级工作节点</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">4. 验证集群功能</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">5. 更新 kubectl 和其他工具</div>
                 </div>
 
@@ -269,13 +269,13 @@ kubectl taint nodes node1 key:NoSchedule-</code></pre>
                 <div class="relation-diagram">
                     <div class="diagram-container" style="flex-direction: column; align-items: center;">
                         <div class="diagram-box object">Pod/容器</div>
-                        <div class="diagram-arrow">⬇︎ 生成日志 ⬇︎</div>
+                        <div class="diagram-arrow">↓ 生成日志 ↓</div>
                         <div class="diagram-box object">节点上的日志文件</div>
-                        <div class="diagram-arrow">⬇︎ 采集 ⬇︎</div>
+                        <div class="diagram-arrow">↓ 采集 ↓</div>
                         <div class="diagram-box object">日志收集器（Fluentd/Fluent Bit</div>
-                        <div class="diagram-arrow">⬇︀ 发送 ⬇︀</div>
+                        <div class="diagram-arrow">↓ 发送 ↓</div>
                         <div class="diagram-box object">日志存储（ES/Loki）</div>
-                        <div class="diagram-arrow">⬇︀ 查询 ⬇︀</div>
+                        <div class="diagram-arrow">↓ 查询 ↓</div>
                         <div class="diagram-box object">可视化界面（Kibana/Grafana</div>
                     </div>
                 </div>
@@ -337,17 +337,17 @@ kubectl logs -l app=myapp --all-containers=true</code></pre>
                 <h3>故障排查流程</h3>
                 <div class="flow-diagram">
                     <div class="flow-step">1. 确定问题范围（节点/应用）</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">2. 检查节点状态</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">3. 检查 Pod 状态</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">4. 查看事件和日志</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">5. 检查配置和资源</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">6. 分析根本原因</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">7. 修复问题并验证</div>
                 </div>
 

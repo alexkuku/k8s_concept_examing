@@ -98,7 +98,7 @@
                 <div class="relation-diagram">
                     <div class="diagram-container" style="flex-direction: column; align-items: center;">
                         <div class="diagram-box object">Pod</div>
-                        <div style="text-align: center;">共享网络命名空间 + 共享存储卷</div>
+                        <div class="diagram-arrow">↓ 共享网络命名空间 + 共享存储卷 ↓</div>
                         <div style="display: flex; gap: 1rem; justify-content: center;">
                             <div class="diagram-box object">容器 1 (主容器)</div>
                             <div class="diagram-box object">容器 2 (边车)</div>
@@ -110,11 +110,11 @@
                 <h3>Pod 生命周期</h3>
                 <div class="flow-diagram">
                     <div class="flow-step">1. Pending (等待调度)</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">2. Running (运行中)</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">3. Succeeded (成功完成) 或 Failed (失败)</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">4. 任意时刻可能进入 Unknown (未知状态)</div>
                 </div>
 
@@ -205,11 +205,11 @@
 
                 <div class="flow-diagram">
                     <div class="flow-step">Init 容器 1 成功</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">Init 容器 2 成功</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">...（多个 Init 容器）</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">主容器启动</div>
                 </div>
 
@@ -330,9 +330,9 @@ spec:
                 <div class="relation-diagram">
                     <div class="diagram-container" style="flex-direction: column; align-items: center;">
                         <div class="diagram-box object">Deployment</div>
-                        <div style="text-align: center;">管理 ReplicaSet</div>
+                        <div class="diagram-arrow">↓ 管理 ReplicaSet ↓</div>
                         <div class="diagram-box object">ReplicaSet</div>
-                        <div style="text-align: center;">管理 Pod</div>
+                        <div class="diagram-arrow">↓ 管理 Pod ↓</div>
                         <div style="display: flex; gap: 1rem;">
                             <div class="diagram-box object">Pod 1</div>
                             <div class="diagram-box object">Pod 2</div>

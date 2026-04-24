@@ -37,13 +37,13 @@
                 <div class="relation-diagram">
                     <div class="diagram-container" style="flex-direction: column; align-items: center;">
                         <div class="diagram-box control-plane">控制平面</div>
-                        <div class="diagram-arrow">⬆︎ 管理网络 ⬆︎</div>
+                        <div class="diagram-arrow">↑ 管理网络 ↑</div>
                         <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; width: 100%;">
                             <div class="diagram-box worker-node">节点 1 (CNI 插件)</div>
                             <div class="diagram-box worker-node">节点 2 (CNI 插件)</div>
                             <div class="diagram-box worker-node">节点 3 (CNI 插件)</div>
                         </div>
-                        <div class="diagram-arrow">⬇︎ 跨节点通信 ⬇︎</div>
+                        <div class="diagram-arrow">↓ 跨节点通信 ↓</div>
                         <div style="display: flex; gap: 1rem; justify-content: center;">
                             <div class="diagram-box object">Pod A (10.244.1.2)</div>
                             <div class="diagram-box object">Pod B (10.244.2.3)</div>
@@ -70,7 +70,7 @@
                 <div class="relation-diagram">
                     <div class="diagram-container" style="flex-direction: column; align-items: center;">
                         <div class="diagram-box object">Service (ClusterIP: 10.96.0.100)</div>
-                        <div class="diagram-arrow">⬆︎ 负载均衡 ⬆︎</div>
+                        <div class="diagram-arrow">↑ 负载均衡 ↑</div>
                         <div style="display: flex; gap: 1rem;">
                             <div class="diagram-box object">Pod 1 (10.244.1.5)</div>
                             <div class="diagram-box object">Pod 2 (10.244.2.8)</div>
@@ -249,9 +249,9 @@ spec:
                 <div class="relation-diagram">
                     <div class="diagram-container" style="flex-direction: column; align-items: center; max-width: 700px;">
                         <div class="diagram-box object">外部客户端</div>
-                        <div class="diagram-arrow">→ HTTP/HTTPS →</div>
+                        <div class="diagram-arrow">↓ HTTP/HTTPS ↓</div>
                         <div class="diagram-box object">Ingress Controller</div>
-                        <div class="diagram-arrow">→ 根据 Host/Path →</div>
+                        <div class="diagram-arrow">↓ 根据 Host/Path ↓</div>
                         <div style="display: flex; gap: 1rem;">
                             <div style="display: flex; flex-direction: column; align-items: center;">
                                 <div class="diagram-box object">Service 1</div>

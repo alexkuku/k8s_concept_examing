@@ -256,8 +256,8 @@ main {
 }
 
 .arrow {
-    font-size: 2rem;
-    color: var(--border-color);
+    font-size: 1.2rem;
+    color: var(--primary-color);
 }
 
 /* 概念卡片网格 */
@@ -523,8 +523,8 @@ main {
 }
 
 .diagram-arrow {
-    font-size: 2rem;
-    color: var(--border-color);
+    font-size: 1.2rem;
+    color: var(--primary-color);
 }
 
 /* 对比表格 */
@@ -647,12 +647,12 @@ main {
 .tree-line-vertical {
     width: 2px;
     height: 30px;
-    background: var(--border-color);
+    background: var(--primary-color);
 }
 
 .tree-line-horizontal {
     height: 2px;
-    background: var(--border-color);
+    background: var(--primary-color);
     flex: 1;
 }
 

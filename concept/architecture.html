@@ -29,8 +29,8 @@
                 <div class="relation-diagram">
                     <div class="diagram-container" style="flex-direction: column; align-items: center; max-width: 800px;">
                         <div class="diagram-box control-plane" style="min-width: 300px;">控制平面 (Control Plane)</div>
-                        <div class="diagram-arrow">⬆︎ 管理/协调 ⬆︎</div>
-                        <div class="diagram-arrow">⬇︎ 通信/监控 ⬇︎</div>
+                        <div class="diagram-arrow">↑ 管理/协调 ↑</div>
+                        <div class="diagram-arrow">↓ 通信/监控 ↓</div>
                         <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
                             <div class="diagram-box worker-node">工作节点 1</div>
                             <div class="diagram-box worker-node">工作节点 2</div>
@@ -57,9 +57,9 @@
 
                 <div class="flow-diagram">
                     <div class="flow-step">etcd (存储)</div>
-                    <div class="flow-arrow">⇄</div>
+                    <div class="flow-arrow">↕</div>
                     <div class="flow-step">API Server (入口)</div>
-                    <div class="flow-arrow">→→→</div>
+                    <div class="flow-arrow">↓</div>
                     <div style="display: flex; gap: 1rem; justify-content: center; align-items: center;">
                         <div class="flow-step" style="min-width: 150px;">Scheduler</div>
                         <div class="flow-step" style="min-width: 150px;">Controller Manager</div>
@@ -158,13 +158,13 @@
                 <h4>调度流程</h4>
                 <div class="flow-diagram">
                     <div class="flow-step">1. 监听未绑定的 Pod</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">2. 过滤不合适的节点</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">3. 对候选节点打分</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">4. 选择最高分节点</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">5. 绑定 Pod 到节点</div>
                 </div>
 
@@ -263,13 +263,13 @@
                 <h4>控制器工作循环</h4>
                 <div class="flow-diagram">
                     <div class="flow-step">Watch 监听资源变化</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">对比期望状态 vs 实际状态</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">有差异？</div>
                     <div class="flow-arrow">是</div>
                     <div class="flow-step">执行调整操作</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">返回 Watch（持续循环）</div>
                 </div>
 
@@ -323,13 +323,13 @@
                 <div class="relation-diagram">
                     <div class="diagram-container" style="flex-direction: column; align-items: center;">
                         <div class="diagram-box worker-node">工作节点</div>
-                        <div style="text-align: center; margin: 10px;">↓ 包含 ↓</div>
+                        <div class="diagram-arrow">↓ 包含 ↓</div>
                         <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
                             <div class="diagram-box object">Kubelet</div>
                             <div class="diagram-box object">Kube-proxy</div>
                             <div class="diagram-box object">Container Runtime</div>
                         </div>
-                        <div style="text-align: center; margin: 10px;">↓ 运行 ↓</div>
+                        <div class="diagram-arrow">↓ 运行 ↓</div>
                         <div class="diagram-box object">Pods (容器)</div>
                     </div>
                 </div>
@@ -377,15 +377,15 @@
                 <h4>Kubelet 工作流程</h4>
                 <div class="flow-diagram">
                     <div class="flow-step">1. 向 API Server 注册节点</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">2. 定期同步节点状态</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">3. 接收 Pod 分配</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">4. 通过 CRI 创建容器</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">5. 监控容器状态</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">6. 上报 Pod 状态</div>
                 </div>
 
@@ -495,8 +495,8 @@
                 <div class="relation-diagram">
                     <div class="diagram-container" style="flex-direction: column; align-items: center; max-width: 700px;">
                         <div class="diagram-box control-plane">控制平面</div>
-                        <div class="diagram-arrow">⬆︎ HTTPS REST API ⬆︎</div>
-                        <div class="diagram-arrow">⬇︎ 心跳/状态上报 ⬇︎</div>
+                        <div class="diagram-arrow">↑ HTTPS REST API ↑</div>
+                        <div class="diagram-arrow">↓ 心跳/状态上报 ↓</div>
                         <div class="diagram-box worker-node">工作节点 (Kubelet)</div>
                     </div>
                 </div>
@@ -608,13 +608,13 @@
 
                 <div class="flow-diagram">
                     <div class="flow-step">故障发生</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">检测到失败（心跳超时/健康检查失败）</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">控制器识别状态差异</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">执行恢复操作</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">系统恢复健康状态</div>
                 </div>
 

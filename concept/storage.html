@@ -37,14 +37,14 @@
                 <div class="relation-diagram">
                     <div class="diagram-container" style="flex-direction: column; align-items: center;">
                         <div class="diagram-box object">Pod</div>
-                        <div class="diagram-arrow">⬇︎ 挂载 ⬇︎</div>
+                        <div class="diagram-arrow">↓ 挂载 ↓</div>
                         <div class="diagram-box object">Volume (虚拟层)</div>
-                        <div class="diagram-arrow">⬇︎ 绑定到 ⬇︎</div>
+                        <div class="diagram-arrow">↓ 绑定到 ↓</div>
                         <div style="display: flex; gap: 1rem; justify-content: center;">
                             <div class="diagram-box object" style="background: #ffd700;">PV</div>
                             <div class="diagram-box object" style="background: #90EE90;">PVC</div>
                         </div>
-                        <div class="diagram-arrow">⬇︎ 使用 ⬇︎</div>
+                        <div class="diagram-arrow">↓ 使用 ↓</div>
                         <div class="diagram-box object">StorageClass (动态创建) 或 物理存储</div>
                     </div>
                 </div>
@@ -173,11 +173,11 @@ volumes:
                 <div class="relation-diagram">
                     <div class="diagram-container" style="flex-direction: column; align-items: center;">
                         <div class="diagram-box object">Pod</div>
-                        <div class="diagram-arrow">⬆︎ 使用 ⬆︎</div>
+                        <div class="diagram-arrow">↑ 使用 ↑</div>
                         <div class="diagram-box object" style="background: #90EE90;">PVC (PersistentVolumeClaim)</div>
-                        <div class="diagram-arrow">⬆︎ 绑定 ⬆︎</div>
+                        <div class="diagram-arrow">↑ 绑定 ↑</div>
                         <div class="diagram-box object" style="background: #ffd700;">PV (PersistentVolume)</div>
-                        <div class="diagram-arrow">⬆︎ 提供存储 ⬆︎</div>
+                        <div class="diagram-arrow">↑ 提供存储 ↑</div>
                         <div class="diagram-box object">物理存储 (NFS/云存储等)</div>
                     </div>
                 </div>
@@ -288,13 +288,13 @@ spec:
                 <h3>PVC 和 PV 绑定流程</h3>
                 <div class="flow-diagram">
                     <div class="flow-step">1. 用户创建 PVC</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">2. K8s Watch 到 PVC 请求</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">3. 匹配满足条件的 PV</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">4. PVC 和 PV 绑定（一对一）</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">5. Pod 可以使用 PVC</div>
                 </div>
 
@@ -326,9 +326,9 @@ spec:
 
                 <div class="flow-diagram">
                     <div class="flow-step">管理员创建 PV</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">用户创建 PVC</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">PVC 绑定到匹配的 PV</div>
                 </div>
 
@@ -337,11 +337,11 @@ spec:
 
                 <div class="flow-diagram">
                     <div class="flow-step">管理员创建 StorageClass</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">用户创建 PVC（指定 StorageClass）</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">自动创建 PV</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">PVC 绑定到新创建的 PV</div>
                 </div>
 

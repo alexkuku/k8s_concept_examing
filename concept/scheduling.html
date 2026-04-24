@@ -38,9 +38,9 @@
                 <div class="relation-diagram">
                     <div class="diagram-container" style="flex-direction: column; align-items: center;">
                         <div class="diagram-box object">Pod（待调度）</div>
-                        <div class="diagram-arrow">→</div>
+                        <div class="diagram-arrow">↓</div>
                         <div class="diagram-box object">Kubernetes Scheduler</div>
-                        <div class="diagram-arrow">→</div>
+                        <div class="diagram-arrow">↓</div>
                         <div style="display: flex; gap: 1rem;">
                             <div class="diagram-box worker-node">节点 1</div>
                             <div class="diagram-box worker-node">节点 2</div>
@@ -60,13 +60,13 @@
                 <h3>调度流程详解</h3>
                 <div class="flow-diagram">
                     <div class="flow-step">1. Watch 待调度 Pod</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">2. 预选阶段：过滤不合适的节点</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">3. 优选阶段：对候选节点打分</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">4. 选择最高分节点</div>
-                    <div class="flow-arrow">→</div>
+                    <div class="flow-arrow">↓</div>
                     <div class="flow-step">5. 绑定 Pod 到节点</div>
                 </div>
 
