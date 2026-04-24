@@ -27,7 +27,7 @@
                 <p>Kubernetes 集群由一组运行容器化应用的机器（节点）组成。集群分为两个主要部分：<strong>控制平面</strong>（Control Plane）和<strong>工作节点</strong>（Worker Nodes）。</p>
 
                 <div class="relation-diagram">
-                    <div class="diagram-container" style="flex-direction: column; align-items: center; max-width: 800px;">
+                    <div class="diagram-container" style="flex-direction: column; align-items: center; max-width: 800px; margin: 0 auto;">
                         <div class="diagram-box control-plane" style="min-width: 300px;">控制平面 (Control Plane)</div>
                         <div class="diagram-arrow">↑ 管理/协调 ↑</div>
                         <div class="diagram-arrow">↓ 通信/监控 ↓</div>
@@ -493,10 +493,10 @@
                 <p>Kubernetes 集群中的各组件需要相互通信才能正常工作。通信主要通过以下方式：</p>
 
                 <div class="relation-diagram">
-                    <div class="diagram-container" style="flex-direction: column; align-items: center; max-width: 700px;">
+                    <div class="diagram-container" style="flex-direction: column; align-items: center; max-width: 700px; margin: 0 auto;">
                         <div class="diagram-box control-plane">控制平面</div>
-                        <div class="diagram-arrow">↑ HTTPS REST API ↑</div>
-                        <div class="diagram-arrow">↓ 心跳/状态上报 ↓</div>
+                        <div class="diagram-arrow" style="font-size: 0.85rem;">↑ HTTPS REST API ↑</div>
+                        <div class="diagram-arrow" style="font-size: 0.85rem;">↓ 心跳/状态上报 ↓</div>
                         <div class="diagram-box worker-node">工作节点 (Kubelet)</div>
                     </div>
                 </div>
@@ -764,7 +764,7 @@ metadata:
             <section class="concept-section">
                 <h2>完整架构关系图</h2>
                 <div class="relation-diagram">
-                    <div style="display: flex; flex-direction: column; gap: 1rem; align-items: center;">
+                    <div style="display: flex; flex-direction: column; gap: 1rem; align-items: center; max-width: 900px; margin: 0 auto;">
                         <div class="diagram-box control-plane" style="width: 100%; text-align: center;">控制平面 (Control Plane)</div>
 
                         <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">

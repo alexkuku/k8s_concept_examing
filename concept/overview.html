@@ -133,7 +133,7 @@
 
                 <div class="tree-diagram">
                     <div class="tree-root">Kubernetes 对象</div>
-                    <div class="tree-branch-row">
+                    <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 0.8rem; max-width: 650px;">
                         <div class="tree-branch">Pod</div>
                         <div class="tree-branch">Node</div>
                         <div class="tree-branch">Service</div>
@@ -602,10 +602,10 @@
             <section class="concept-section">
                 <h2>核心概念关系图</h2>
                 <div class="relation-diagram">
-                    <div class="diagram-container" style="flex-direction: column; align-items: stretch;">
-                        <div class="diagram-box control-plane" style="text-align: center;">控制平面</div>
+                    <div class="diagram-container" style="flex-direction: column; align-items: center;">
+                        <div class="diagram-box control-plane" style="min-width: 300px;">控制平面</div>
                         <div class="diagram-arrow">↓ 管理 ↓</div>
-                        <div style="display: flex; justify-content: space-around; flex-wrap: wrap;">
+                        <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 0.8rem; max-width: 600px;">
                             <div class="diagram-box object">Pod</div>
                             <div class="diagram-box object">Service</div>
                             <div class="diagram-box object">Deployment</div>
