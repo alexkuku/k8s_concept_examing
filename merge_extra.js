@@ -43,4 +43,4 @@ if (startIdx > 0) {
 }
 
 fs.writeFileSync('./exam/questions.js', result, 'utf8');
-console.log('合并完成!');
+console.log('合并完成!');}
